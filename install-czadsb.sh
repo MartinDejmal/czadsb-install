@@ -70,6 +70,8 @@ function set_default(){
     # Adresar pro instalaci nekterych programu
     [[ -z ${INSTALL_FOLDER} ]] && INSTALL_FOLDER="/opt/czadsb"
 
+    # Povoleni/stav instalace
+    [[ -z ${DUMP1090} ]] && DUMP1090="notinstall"
     # Nazev programu Dump1090
     [[ -z ${DUMP1090_NAME} ]] && DUMP1090_NAME="dump1090-fa"
     # Vyber rtl-sdr zarizeni
@@ -79,6 +81,25 @@ function set_default(){
     # Zesileni rtl-sdr zarizebi
     [[ -z ${DUMP1090_GAIN} ]] && DUMP1090_GAIN="60"
 
+    # Nazev programu ReADSB
+    [[ -z ${READSB_NAME} ]] && READSB_NAME="readsb"
+    # Vyber rtl-sdr zarizeni
+    [[ -z ${READSB_DEV} ]] && READSB_DEV=0
+    # Kalibrace rtl-sdr zarizeni
+    [[ -z ${READSB_PPM} ]] && READSB_PPM=0
+    # Zesileni rtl-sdr zarizebi
+    [[ -z ${READSB_GAIN} ]] && READSB_GAIN="auto"
+    # Vychozi adresa pro odesilani ADSB dat
+    [[ -z ${READSB_DST} ]] && READSB_DST="feed.czadsb.cz,30004"
+    # Vychozi adresa pro odesilani ADSB dat
+    [[ -z ${READSB_BCK} ]] && READSB_BCK="feed.rxw.cz,30004"
+    # Pridani dalsich voleb pro ReADSB
+    [[ -z ${READSB_OPT} ]] && READSB_OPT=""
+
+    # Povoleni/stav instalace
+    [[ -z ${ADSBFWD} ]] && ADSBFWD="notinstall"
+    # Typ SW pro ADSB FWD
+    [[ -z ${ADSBFWD_TYPE} ]] && ADSBFWD_TYPE="adsbfwd"
     # Nazev programu pro forward ADSB dat
     [[ -z ${ADSBFWD_NAME} ]] && ADSBFWD_NAME="adsbfwd"
     # Vychozi adresa pro cteni ADSB dat z dump1090
@@ -94,6 +115,15 @@ function set_default(){
     [[ -z ${MLAT_RESULT} ]] && MLAT_RESULT="czadsb.cz:31003"
     # Format a typ pripojeni pro odesilani zpracovanych dat
     [[ -z ${MLAT_FORMAT} ]] && MLAT_FORMAT="basestation,connect"
+
+    # Lighttpd  
+    [[ -z ${LIGHTTPD} ]] && LIGHTTPD="notinstall"
+    # Nazev programu web serveru
+    [[ -z ${LIGHTTPD_NAME} ]] && LIGHTTPD_NAME="lighttpd"
+    # Tar1090  
+    [[ -z ${TAR1090} ]] && TAR1090="notinstall"
+    # Nazev programu Tar1090
+    [[ -z ${TAR1090_NAME} ]] && TAR1090_NAME="tar1090"
 
     # Nazev VPN Edge n2n
     [[ -z ${N2NADSB_NAME} ]] && N2NADSB_NAME="vpn-czadsb"
@@ -162,6 +192,15 @@ function set_default(){
 
     # Vychozi nastaveni pro ADS-B Exchange 
     [[ -z ${ADSBEXCHANGE} ]] && ADSBEXCHANGE="notinstall"
+    
+    # Vychozi stav pro adsb.lol
+    if [[ -f /usr/local/share/adsblol/adsblol-uuid ]];then
+        [[ -z ${ADSBLOL} ]] && ADSBLOL="install"
+        ADSBLOL_ID=$(cat /usr/local/share/adsblol/adsblol-uuid)
+    else
+        [[ -z ${ADSBLOL} ]] && ADSBLOL="notinstall"
+        [[ -z ${ADSBLOL_ID} ]] && ADSBLOL_ID=""
+    fi
 
 }
 
@@ -191,7 +230,7 @@ function info_system(){
     printf "┌────────────────────────── Informace o systemu ───────────────────────────┐\n"
     printf "│ System: %-64s │\n" "${STATION_SYSTEM} - ${STATION_ARCH}"
     printf "│ Model: %-64s  │\n" "${STATION_MODEL} - ${STATION_MACHINE}"
-    printf "│ URL: %-64s    │\n" "${INSTALL_TXT}"
+    printf "│ URL: %-63s v.%-1s │\n" "${INSTALL_TXT}" "${CFG_VERSION}"
     [[ "$1" == "end" ]] && printf "└──────────────────────────────────────────────────────────────────────────┘\n"
 }
 
@@ -273,6 +312,7 @@ function info_components() {
     # Stačí přidat prefix do pole
     local prefixes=(
         "dump1090"
+        "readsb"
         "tar1090"
         "adsbfwd"
         "adsbhub"         # adsbhub.org
@@ -299,8 +339,8 @@ function info_components() {
             local svc="$(basename "$svcfile" .service)"
 
             # vynech duplicitní položky
-            if [[ ! " ${found_services[*]} " =~ " ${svc} " ]]; then
-                found_services+=("$svc")
+            if [[ ! "${found_services[*]}" =~ "${svc}" ]]; then
+                found_services+=("${svc}")
             fi
         done
     done
@@ -342,8 +382,13 @@ function info_setting(){
         ADSBFWD_TXT=""
     fi
     printf "┌ Sluzba ───── Instalace ───────────── Nastaveni ──────────────────────────┐\n"
+    if [[ ${CFG_VERSION} -eq 4 ]];then
+    printf "│ ReADSB       %-10s dev: %-15s ppm: %-5d  gain: %4s dB   │\n" "${READSB}" "${READSB_DEV}" "${READSB_PPM}" "${READSB_GAIN}"
+    printf "│              dst: %-53s  │\n" "${READSB_DST}  (${READSB_BCK})"
+    else
     printf "│ Dump1090-fa  %-10s dev: %-15s ppm: %-5d  gain: %4s dB   │\n" "${DUMP1090}" "${DUMP1090_DEV}" "${DUMP1090_PPM}" "${DUMP1090_GAIN}"
     printf "│ ADSBfwd      %-10s dst: %-42s  │\n" "${ADSBFWD}" "${ADSBFWD_DST} ${ADSBFWD_TXT}"
+    fi
     printf "│ Mlat-client  %-10s Server: %-40s │\n" "${MLAT}" "${MLAT_SERVER} -> ${MLAT_RESULT}"
     printf "│ VPN-CzADSB   %-10s url: %-19s Local: %-16s │\n" "${N2NADSB}" "${N2NADSB_SERVER}" "${N2NADSB_LOCAL}"
     printf "│ RpiMonitor   %-59s │\n" "${RPIMONITOR}"
@@ -373,15 +418,21 @@ function menu_edit(){
     printf "┌──────────────────────────── Uprava / editace ────────────────────────────┐\n"
     printf "│ 1. Identifikace (email, lokace)       a. ADSB servery tretich stran      │\n"
     printf "│ 2. Umisteni   (Souradnice a vyska)    b. Mlat-client (spousteni)         │\n"
+    if [[ ${CFG_VERSION} -eq 4 ]];then
+    printf "│ 3. ReADSB     (dev, ppm, gain, ...)   c. RpiMonitor  (spousteni)         │\n"
+    printf "│ 4. RTL-SDR    (Serial number)         d. Reporter    (spousteni)         │\n"
+    printf "│ 5. Tar1090 / Lighttpd                 s. Apt upgrade (spousteni)         │\n"
+    else    
     printf "│ 3. Dump1090   (dev, ppm, gain)        c. RpiMonitor  (spousteni)         │\n"
     printf "│ 4. RTL-SDR    (Serial number)         d. Reporter    (spousteni)         │\n"
     printf "│ 5. ADSBfwd    (destinace, port)       x. Smaze konfig soubor - vyvoj     │\n"
+    fi
     printf "│ 6. VPN-CzADSB (local IP)              u. Upgrade/preinstalace aplikace   │\n"
     printf "│ 7. OGN /Flarm (dev, ppm, gain)        v. Aplikuj zmeny + upgrade         │\n"
     printf "│ 9. Aplikuj zmeny                      r. Aplikuj zmeny a proved restart  │\n"
     printf "│ 0. Aplikuj zmeny a ukonci skript      q. Ukonci skript bez aplikace zmen │\n"
     printf "├──────────────────────────────────────────────────────────────────────────┘\n"
-    input "* Vase volba [0 - d] ?" '^[0-9a-duvrqx]$' ""
+    input "* Vase volba [0 - d] ?" '^[0-9a-duvrqsx]$' ""
 }
 
 # Funkce nabidne moznosti ADSB serveru tretich stran 
@@ -420,6 +471,27 @@ function set_expert(){
         EXPERT="expert"
     fi
     echo
+}
+
+# Funkce nastavi, zda se ma provadet aktualizace systemu
+function set_upgrade(){
+    printf "┌──────────────────── Aktualizace operacniho systemu  ─────────────────────┐\n"
+    printf "│  Doporucuje se udrzovat  operacni system  aktualni. Pokud nastavite Auto │\n"
+    printf "│  bude  pri  kazdem  ukonceni  skriptu  provedena  kontrola  s  pripadnou │\n"
+    printf "│  aktualizace. Pokud  nastavyte Yes provede se jen  vramci  ukonceni, kdy │\n"
+    printf "│  jset tuto volbu zadali.                                                 │\n"
+    printf "└──────────────────────────────────────────────────────────────────────────┘\n"
+    if [[ "${STATION_UPGRADE}" == "enable" ]];then
+        input "Provest aktualizaci systemu [a/Y/n]" '^[aynAYN]*$' "y"
+    else
+        input "Provest aktualizaci systemu [A/y/n]" '^[aynAYN]*$' "a" 
+    fi
+    [[ "$X" == "a" ]] || [[ "$X" == "A" ]] && STATION_UPGRADE="auto"
+    [[ "$X" == "y" ]] || [[ "$X" == "Y" ]] && STATION_UPGRADE="enable" 
+    [[ "$X" == "n" ]] || [[ "$X" == "N" ]] && STATION_UPGRADE="disable"
+    [[ "${STATION_UPGRADE}" != "auto" ]] && [[ "${STATION_UPGRADE}" != "enable" ]] && [[ "${STATION_UPGRADE}" != "disable" ]] && STATION_UPGRADE="auto"
+    echo
+    UPDATE_UPGRADE=true      
 }
 
 # Funkce nastavi identifikacni udaje zarizeni
@@ -478,6 +550,7 @@ function set_lokalizace(){
     STATION_ALT=${X}
 
     UPDATE_DUMP1090=true
+    UPDATE_READSB=true
     UPDATE_MLAT=true
     echo
 }
@@ -487,9 +560,16 @@ function set_dump1090(){
     if [[ "${DUMP1090}" != "enable" ]] && [[ "${DUMP1090}" != "disable" ]];then
         check=`netstat -tln | grep 30005`
         [[ ${#check} -ge 10 ]] &&  DUMP1090="install"
+        command -v readsb &>/dev/null &&  DUMP1090="install"
         command -v dump1090 &>/dev/null &&  DUMP1090="install"
-        command -v dump1090-fe &>/dev/null &&  DUMP1090="install"
+        command -v dump1090-fe &>/dev/null &&  DUMP1090="ninstall"
         [[ -z ${DUMP1090} ]] && DUMP1090="enable"
+    fi
+    if [[ "${DUMP1090}" != "enable" ]] && [[ "${DUMP1090}" != "disable" ]] && [[ "${DUMP1090}" != "install" ]];then
+        DUMP1090="enable"
+    fi    
+    if [[ "${READSB}" =~ "enable" ]] || [[ "${READSB}" =~ "disable" ]];then
+        [[ -z ${ADSBFWD_TYPE} ]] && ADSBFWD_TYPE="readsb"
     fi
     printf     "┌────────────────────────────── Dump1090-fa ───────────────────────────────┐\n"
     if [[ "${DUMP1090}" == "install"  ]];then
@@ -497,7 +577,7 @@ function set_dump1090(){
         printf "│   Takto nainstalovany dump1090 neni mozne timto skriptem konfigurovat.   │\n"
         printf "└──────────────────────────────────────────────────────────────────────────┘\n"
     else
-        printf "│ Dump1090  zpracovava data z RTL-SDR 'klicenky' a dekoduje vlastni  ACARS │\n"
+        printf "│ Dump1090  zpracovava data z RTL-SDR 'klicenky' a dekoduje  vlastni  ADSB │\n"
         printf "│ spravy ktere se dale  preposilaji.  Take  umoznuje  zobrazit pres webove │\n"
         printf "│ rozhrani vlastni  pozice letadel ktere prijima.  Tato komponenta se bude │\n"
         printf "│ instalovat automaticky.                                                  │\n"
@@ -524,8 +604,68 @@ function set_dump1090(){
     echo
 }
 
+# Funkce overi ReADSB a nastavi hodnoty
+function set_readsb(){
+    if [[ "${READSB}" != "enable" ]] && [[ "${READSB}" != "disable" ]];then
+        check=`netstat -tln | grep 30005`
+        [[ ${#check} -ge 10 ]] &&  READSB="install"
+        command -v readsb &>/dev/null &&  READSB="install"
+        command -v dump1090 &>/dev/null &&  READSB="install"
+        command -v dump1090-fe &>/dev/null &&  READSB="ninstall"
+    fi
+    if [[ "${READSB}" != "enable" ]] && [[ "${READSB}" != "disable" ]] && [[ "${READSB}" != "install" ]];then
+        READSB="enable"
+    fi    
+    if [[ "${READSB}" =~ "enable" ]] || [[ "${READSB}" =~ "disable" ]];then
+        ADSBFWD_TYPE="direct"
+    fi
+    printf     "┌───────────────────────────────── ReADSB ─────────────────────────────────┐\n"
+    if [[ "${READSB}" == "install"  ]];then
+        printf "│ Na  zarizeni  byl  detekovan  program  Dump1090  nebo  ReADSB. V takovem │\n"
+        printf "│ pripade neni  mozne  ReADSB  spravovat  tímto  skryptem, protoze  by  to │\n"
+        printf "│ narusilo  stavajici  stav  zarizeni. Prosim  pridejte  primo  parametr k │\n"
+        printf "│ zasilani dat na CzADSB, nebo pouzite sluzbu adsbfwd pro predavani dat na │\n"
+        printf "│ na CzADSB.    Dekujiem                                                   │\n"
+        printf "└──────────────────────────────────────────────────────────────────────────┘\n"
+        input "Pro pokracovabi stisknete ENTER ..." '' ""
+    else
+        printf "│ ReADSB plne nahrazuje drivejsi DUMP1090.  Zpracovava data z RTL klicenky │\n"
+        printf "│ a zaroven  tyto  data  posila na  projekt  CzADSB k dalsimu  spracovani. │\n"
+        printf "│ Zaroven je mozne na standartnim portu 30005 tyto data cist a preposilat  │\n"
+        printf "│ dalsim projektum, joko napriklad FR24, ADSB.lol, ...                     │\n"
+        printf "│ Tato  komponenta  se  bude  take instalovat automaticky.                 │\n"
+        list_rtlsdr
+        if [[ ${RTL_SDR} -gt 1 ]];then
+            printf "│                                                                          │\n"
+            printf "│ Na zarizeni bylo detekovano vice RTL SDR zarizeni:                       │\n"
+            info_rtlsdr
+            RTL_SDR=$(( ${RTL_SDR} - 1 ))
+            input "Vyberte ktera se ma pouzita pro dump1090 a to bud podle ID (0 az ${RTL_SDR}) nebo SN [${DUMP1090_DEV}]:" '^[0-9]*$' "${READSB_DEV}"
+            READSB_DEV=$X
+        else
+            printf "└──────────────────────────────────────────────────────────────────────────┘\n"
+        fi
+        if [[ "${EXPERT}" != "user" ]];then
+            input "Nastaveni korekce ppm pro RTL-SDR (pokud nevite, ponechte) [${READSB_PPM}]:" '^[-0-9]*$' "${READSB_PPM}"
+            READSB_PPM=${X}
+            input "Nastaveni zesileni pro RTL-SDR (pokud nevite, ponechte prazdne) [${READSB_GAIN}]:" '^[auto0-9\.]*$' "${READSB_GAIN}"
+            READSB_GAIN=${X}
+            input "Zadejte adresy a port (oddeleny carkou) kam se primarne maji data posilat [${READSB_DST}]:" '^[a-zA-Z0-9_\.,\-\ ]*$' "${READSB_DST}"
+            READSB_DST=${X}
+            input "Zadejte adresy a port (oddeleny carkou) zalozniho serveru pro zasilani dat [${READSB_BCK}]:" '^[a-zA-Z0-9_\.,\-\ ]*$' "${READSB_BCK}"
+            READSB_BAC=${X}
+            input "Zde muzete nastavit specialni paramatery pro ReADSB (prosim jen tehdy, pokud vite co delate!) [${READSB_OPT}]:" '' "${READSB_OPT}"
+            READSB_OPT=${X}
+        fi
+        UPDATE_READSB=true
+        UPDATE_LIGHTTPD=true
+    fi    
+    echo
+}
+
 # Funkce overi adsbfwd a nastavi hodnoty
 function set_adsbfwd(){
+    ADSBFWD_TYPE="adsbfwd"
     printf "┌──────────────────────────────── ADSBfwd ─────────────────────────────────┐\n"
     printf "│ ADSBfwd  preposila  ADSB  data z dump1090 komunite CzADSB.  Muze zaroven │\n"
     printf "│ preposilat i na jine, podobne projekty. Tato  komponenta  se  bude  take │\n"
@@ -571,11 +711,60 @@ function set_adsbfwd(){
     echo
 }
 
+# Funkce overi adsbfwd a nastavi hodnoty
+function set_adsbfwd2(){
+    ADSBFWD_TYPE="readsb"
+    printf "┌─────────────────────────────── ADSBfwd2 ─────────────────────────────────┐\n"
+    printf "│ ADSBfwd  preposila  ADSB  data z dump1090 komunite CzADSB.  Muze zaroven │\n"
+    printf "│ preposilat i na jine, podobne projekty. Tato  komponenta  se  bude  take │\n"
+    printf "│ instalovat automaticky.                                                  │\n"
+    printf "└──────────────────────────────────────────────────────────────────────────┘\n"
+    [[ -z ${ADSBFWD} ]] && ADSBFWD="enable"
+    if [[ "${EXPERT}" != "user" ]];then
+        if [[ "${ADSBFWD}" != "enable" ]] && [[ "${ADSB}" != "disable" ]];then
+            if [[ "${ADSBFWD}" == "notinstall" ]];then
+                input "Instalovat ADSBfwd pro preposilani ADSB dat ? [y/N]:" '^[ynYN]*$' "n"
+            else
+                input "Instalovat ADSBfwd pro preposilani ADSB dat ? [Y/n]:" '^[ynYN]*$' "y"
+            fi
+            if [[ "$X" == "n" ]] || [[ "$X" == "N" ]];then
+                ADSBFWD="notinstall"
+            else
+                ADSBFWD="enable"
+            fi
+        fi
+    fi
+    if [[ "${ADSBFWD}" =~ "disable" ]] || [[ "${ADSBFWD}" =~ "enable" ]];then
+        if [[ "${EXPERT}" != "user" ]];then
+            if [[ "${ADSBFWD}" == "diseble" ]];then
+                input "Ma se ADSBfwd spoustet automaticky [y/N]:" '^[ynYN]*$' "n"
+            else
+                input "Ma se ADSBfwd spoustet automaticky [Y/n]:" '^[ynYN]*$' "y"
+            fi
+            if [[ "$X" == "n" ]] || [[ "$X" == "N" ]];then
+                ADSBFWD="disable"
+            else
+                ADSBFWD="enable"
+            fi
+        fi
+        if [[ "${EXPERT}" != "user" ]];then
+            input "Zadejte adresy a port (oddeleny carkou) kam se primarne maji data posilat [${READSB_DST}]:" '^[a-zA-Z0-9_\.\-\ ]*$' "${ADSBFWD_DST}"
+            ADSBFWD_DST=${X}
+            input "Zadejte adresy a port (oddeleny carkou) zalozniho serveru pro zasilani dat [${READSB_BCK}]:" '^[a-zA-Z0-9_\.\-\ ]*$' "${READSB_BCK}"
+            ADSBFWD_BAC=${X}
+            input "Zde muzete nastavit specialni paramatery pro ReADSB (prosim jen tehdy, pokud vite co delate!) [${READSB_OPT}]:" '^[a-zA-Z0-9_\.\-\ ]*$' "${ADSBFWD_OPT}"
+            ADSBFWD_OPT=${X}
+        fi
+        UPDATE_ADSBFWD=true
+    fi
+    echo
+}
+
 # Funkce overi mlatclient a nastavi hodnoty
 function set_mlat(){
     printf "┌────────────────────────────── Mlat-client ───────────────────────────────┐\n"
-    printf "│ Malt-client  pridava  casovou znacku ke zpravam bez GPS udajum a posila  │\n"
-    printf "│ na MLAT server.  Ten na zaklade rozdilu casovych znacek od dalsich darcu │\n"
+    printf "│ Malt-client  pridava  casovou  znacku ke zpravam bez GPS udajum a posila │\n"
+    printf "│ na MLAT server. Ten  na zaklade rozdilu casovych znacek od dalsich darcu │\n"
     printf "│ vypocita polohu letadla. I tato komponenta se instaluje automaticky.     │\n"
     printf "└──────────────────────────────────────────────────────────────────────────┘\n"
     [[ -z ${MLAT} ]] && MLAT="enable"
@@ -606,6 +795,47 @@ function set_mlat(){
         fi
     fi
     UPDATE_MLAT=true
+    echo
+}
+
+# Funkce nastavi reporter dat
+function set_tar1090(){
+    printf "┌─────────────────────────── Tar1090 & Lighttpd ───────────────────────────┐\n"
+    printf "│ Tar1090 z Lighttpd umoznuje zobrazeni zive mapy z letadly primo na vasem │\n"
+    printf "│ zarizeni. Pokud  ale budete sledovat letadla jen na mape CzADSB,  nejsou │\n"
+    printf "│ tyto komponety potreba instalovat. To  doporucujeme pro stare Rasperi ci │\n"
+    printf "│ SD karty.                                                                │\n"
+    printf "└──────────────────────────────────────────────────────────────────────────┘\n"
+    if [[ "${TAR1090}" != "enable" ]] && [[ "${TAR1090}" != "disable" ]];then
+        if [[ -z ${TAR1090} ]] || [[ ${TAR1090} == "notinstall" ]];then
+            input "Instalovat Tar1090 a Lighttpd pro lokalni zobrazeni letadel ? [Y/n]:" '^[ynYN]*$' "y"
+        else
+            input "Instalovat Tar1090 a Lighttpd pro lokalni zobrazeni letadel ? [y/N]:" '^[ynYN]*$' "n"
+        fi
+        if [[ "$X" == "n" ]] || [[ "$X" == "N" ]];then
+            TAR1090="notinstall"
+            if [[ "${LIGHTTPD}" =~ "disable" ]] || [[ "${LIGHTTPD}" =~ "enable" ]];then
+                LIGHTTPD="notinstall"
+            fi
+        else
+            TAR1090="enable"
+            LIGHTTPD="enable"
+        fi
+    fi
+    if [[ "${LIGHTTPD}" =~ "disable" ]] || [[ "${LIGHTTPD}" =~ "enable" ]];then
+        if [[ "${LIGHTTPD}" == "diseble" ]];then
+            input "Ma se Lighttpd spoustet automaticky [y/N]:" '^[ynYN]*$' "n"
+        else
+            input "Ma se Lighttpd spoustet automaticky [Y/n]:" '^[ynYN]*$' "y"
+        fi
+        if [[ "$X" == "n" ]] || [[ "$X" == "N" ]];then
+            LIGHTTPD="disable"
+        else
+            LIGHTTPD="enable"
+        fi
+        UPDATE_TAR1090=true
+        UPDATE_LIGHTTPD=true
+    fi
     echo
 }
 
@@ -716,7 +946,7 @@ function set_reporter(){
         fi
     fi
     if [[ "${REPORTER}" =~ "disable" ]] || [[ "${REPORTER}" =~ "enable" ]];then
-        if [[ "${REPORTER}" == "diseble" ]];then
+        if [[ "${REPORTER}" == "disable" ]];then
             input "Ma se Reporter spoustet automaticky [y/N]:" '^[ynYN]*$' "n"
         else
             input "Ma se Reporter spoustet automaticky [Y/n]:" '^[ynYN]*$' "y"
@@ -997,12 +1227,14 @@ function set_adsbexchange(){
 
 # Funkce ulozi nastavena data do konfiguracniho souboru
 function set_cfg(){
+$SUDO touch ${CFG}
+$SUDO chmod 666 ${CFG}
 /bin/cat <<EOM > ${CFG}
 # Tento soubor byl vygenerovan automaticky pomoci konfiguracniho skriptu
 # Pokud jsi nejste jisti ze vite co delate, pouzite konfiguracni skript
 
 # Oznaceni verze konfigurace pro pripadnou zpetnou kompatibilitu
-CFG_VERSION=2
+CFG_VERSION="${CFG_VERSION}"
 
 # Identifikace uzivatele a stanice
 # email musi byt zhodny z registracnim emailem
@@ -1018,7 +1250,7 @@ STATION_LON="${STATION_LON}"
 # Lokalizace anteny prijimace. Nadmorska vyska v metrech
 STATION_ALT="${STATION_ALT}"
 
-# Stav dump1090
+# Dump1090
 # instalace dump  [ notinstall | install | disable | enable ] (install = nainstalovan 3 stranou)
 DUMP1090="${DUMP1090}"
 # Pojmenovani sluzby
@@ -1030,9 +1262,29 @@ DUMP1090_PPM="${DUMP1090_PPM}"
 # Zesileni signalu
 DUMP1090_GAIN="${DUMP1090_GAIN}"
 
+# ReADSB
+# instalace readsb  [ notinstall | install | disable | enable ] (install = nainstalovan 3 stranou)
+READSB="${READSB}"
+# Pojmenovani sluzby
+READSB_NAME="${READSB_NAME}"
+# Vyber rtl-sdr zarizeni
+READSB_DEV="${READSB_DEV}"
+# Hodnota PPM pro kalibraci rtl-sdr klicenky
+READSB_PPM="${READSB_PPM}"
+# Zesileni signalu
+READSB_GAIN="${READSB_GAIN}"
+# Primarni adresa a port pro odesilani dat (odelene carkou)
+READSB_DST="${READSB_DST}"
+# Zalozni adresa a port pro odesilani dat (odelene carkou)
+READSB_BCK="${READSB_BCK}"
+# Rozsirujici parametry pro ReADSB
+READSB_OPT="${READSB_OPT}"
+
 # ADSBfwd
 # instalace DASBfwd [ notinstall | disable | enable ]
 ADSBFWD="${ADSBFWD}"
+# Typ SW pro predavani dat [ adsbfwd | readsb | direct ]
+ADSBFWD_TYPE="${ADSBFWD_TYPE}"
 # Nazev programu pro forward ADSB dat
 ADSBFWD_NAME="${ADSBFWD_NAME}"
 # adresa a port zdroje adsb dat [ IP/DNS_url:port ]
@@ -1051,6 +1303,16 @@ MLAT_SERVER="${MLAT_SERVER}"
 MLAT_RESULT="${MLAT_RESULT}"
 # Format a typ pripojeni pro poskytovani zpracovanych dat
 MLAT_FORMAT="${MLAT_FORMAT}"
+
+# Tar1090 & Lighttpd  
+# instalace mlat klienta [ notinstall | disable | enable | install]
+LIGHTTPD="${LIGHTTPD}"
+# nazev web serveru
+LIGHTTPD_NAME="${LIGHTTPD_NAME}"
+# instalace mlat klienta [ notinstall | disable | enable ]
+TAR1090="${TAR1090}"
+# nazev programu Tar1090
+TAR1090_NAME="${TAR1090_NAME}"
 
 # RpiMonitor
 # instalace RpiMonitoru [ notinstall | disable | enable ]
@@ -1114,6 +1376,15 @@ FR24_RECEIVER="${FR24_RECEIVER}"
 # instalace ADS-B Exchange [ notinstall | disable | enable ]
 ADSBEXCHANGE="${ADSBEXCHANGE}"
 
+# ADSB.lol
+# instalace ADSB.lol
+ADSBLOL="${ADSBLOL}"
+# UUID prijmace - je potreba pro obnovu, jinak je pouzito nove
+ADSBLOL_ID="${ADSBLOL_ID}"
+
+# Provadet test na aktualizaci systemu [ auto | enable | disable ]
+STATION_UPGRADE="${STATION_UPGRADE}"
+
 # Informace o zarizeni:
 # Jmeno uzivatele pod kterym se spusti nektere skripty 
 CZADSB_USER="${CZADSB_USER}"
@@ -1133,27 +1404,20 @@ EOM
 # --------------------- Konec funkci pro nastaveni -----------------------------
 
 # ------------------------ Fumkce pro instalaci --------------------------------
+# Funkce provede instalacu upgrade systemu
 function install_upgrade(){
-    printf "┌──────────────────── Aktualizace operacniho systemu  ─────────────────────┐\n"
-    printf "│  Byly detekovany aktualizace vaseho s sytemu. Jednoznacne je doporuceno  │\n"
-    printf "│  udrzovat  system  aktualni.  Proto  doporucujeme  proves  aktualizaci.  │\n"
-    if [[ "${STATION_UPGRADE}" == "auto" ]];then
-        printf "│                                                                          │\n"
-        printf "│  Mate nastavenou automatickou aktualizaci, proto bude nasledne spustena. │\n"
+    if [[ "${STATION_UPGRADE}" != "disable" ]];then
+        echo "Test a aktualizace systemu ..."
+        $SUDO apt update > /tmp/apt_update.tmp 2>&1
+        apt_update_upgrade=$(cat /tmp/apt_update.tmp | grep -o "^[[:digit:]]\+")
+        $SUDO rm -f /tmp/apt_update.tmp
+        [[ "$apt_update_upgrade" == "" ]] && apt_update_upgrade=0
+        if [[ $apt_update_upgrade -gt 0 ]];then
+            $SUDO apt upgrade -y
+            $SUDO apt dist-upgrade -y
+            $SUDO apt autoremove -y
+        fi
     fi
-    printf "└──────────────────────────────────────────────────────────────────────────┘\n"
-    echo
-    if [[ "${STATION_UPGRADE}" != "auto" ]];then
-        input "Provest aktualizaci systemu [Y/n]" '^[ynYN]*$' "y"
-    fi
-    if [[ "$X" == "y" ]] || [[ "$X" == "Y" ]] || [[ "${STATION_UPGRADE}" == "auto" ]];then
-        $SUDO apt update
-        $SUDO apt upgrade -y
-        $SUDO apt dist-upgrade -y
-        $SUDO apt autoremove -y
-    else
-        STATION_UPGRADE=disable
-    fi 
 }
 
 # Funkce zobrazi informaci pred instalaci ovladacu SDR RTL a nasledne provede instalaci
@@ -1170,6 +1434,8 @@ function install_rtl_sdr(){
     input "Instalovat ovladace RTL SDR a restartovat zarizeni [Y/n]" '^[ynYN]*$' "y"
     if [[ "$X" == "y" ]] || [[ "$X" == "Y" ]];then
         $SUDO apt-get update
+        $SUDO apt-get -y upgrade
+        $SUDO apt autoremove -y
         $SUDO apt install -y --no-install-suggests --no-install-recommends rtl-sdr
         if ! [[ -s /etc/udev/rules.d/rtl-sdr.rules ]];then
             $SUDO wget -q https://raw.githubusercontent.com/osmocom/rtl-sdr/master/rtl-sdr.rules -O /etc/udev/rules.d/rtl-sdr.rules
@@ -1182,6 +1448,7 @@ function install_rtl_sdr(){
             echo
             exit 2
         fi
+        echo
         printf "┌────────────────── Instalace ovladacu RTL SDR hotova  ────────────────────┐\n"
         printf "│ Ovladace byly prave doinstalovany. Pro jejich nacteni je nutny restart ! │\n"
         printf "│                                                                          │\n"
@@ -1229,15 +1496,64 @@ function install_dump1090(){
     fi
 }
 
+# Funkce nainstaluje ReADSB jako hlavni zberac dat z rtl klicenky
+function install_readsb(){
+    echo 
+    echo -n "ReADSB"
+    if [[ "${READSB}" == "disable" ]] || [[ "${READSB}" == "enable" ]];then
+        UnitFileState=$(systemctl show ${READSB_NAME} | grep "UnitFileState" | awk -F = '{print $2}')
+        if [[ "${UnitFileState}" == "" ]] || ${UPGRADE} ;then
+            echo " - instalace / upgrade ReADSB"
+            wget -q ${INSTALL_URL}/install-readsb.sh -O /tmp/install.tmp
+            . /tmp/install.tmp
+            rm -f /tmp/install.tmp
+        fi
+        [[ "${UnitFileState}" != "${READSB}d" ]] && $SUDO systemctl ${READSB} ${READSB_NAME}
+        if [[ "${LIGHTTPD}" == "disable" ]] || [[ "${LIGHTTPD}" == "enable" ]];then
+            READSB_API="--net-api-port unix:/run/readsb/api.sock "
+        else
+            READSB_API="--net-api-port 8008 "
+        fi
+        $SUDO touch /etc/default/${READSB_NAME}
+        $SUDO chmod 666 /etc/default/${READSB_NAME}
+        /bin/cat <<EOM >/etc/default/${READSB_NAME}
+# Konfigurace pro ReADSB
+
+# Nastaveni zdroje dat
+RECEIVER_OPTIONS="--lat ${STATION_LAT} --lon ${STATION_LON} --device ${READSB_DEV} --device-type rtlsdr --gain ${READSB_GAIN} --ppm ${READSB_PPM}"
+# Upresneni pro dekodovani
+DECODER_OPTIONS="--modeac --modeac-auto --max-range 450 --write-json-every 1 ${READSB_API}${READSB_OPT}"
+# Sitove nastaveni
+NET_OPTIONS="--net --net-ri-port 30001 --net-ro-port 30002 --net-sbs-port 30003 --net-bi-port 30004,30104 --net-bo-port 30005 --net-connector ${READSB_DST},beast_reduce_plus_out,uuid=${STATION_UUID},${READSB_BCK}"
+# Specifikace pro Json vystupy
+JSON_OPTIONS="--json-location-accuracy 2 --range-outline-hours 24"
+EOM
+        if [[ "$(systemctl is-active ${READSB_NAME})" != "active" ]];then
+            echo " - ERROR: ReADSB neni spusten !"
+        else
+            echo " - restart sluzbu ReADSB pro aplikaci zmen."
+            $SUDO systemctl restart ${READSB_NAME}
+        fi
+    else
+        echo " - instalace neni povolena, neprovadi se zadna zmena."
+    fi
+}
+
 # ADSBfwd
 function install_adsbfwd(){
     echo 
     echo -n "ADSBfwd"
     if [[ "${ADSBFWD}" == "disable" ]] || [[ "${ADSBFWD}" == "enable" ]];then
+#        if [[ -z ${ADSBFWD_TYPE} ]] || [[ "${ADSBFWDE_TYPE}" == "direct" ]]; them 
+
         UnitFileState=$(systemctl show ${ADSBFWD_NAME} | grep "UnitFileState" | awk -F = '{print $2}')
         if [[ "${UnitFileState}" == "" ]] || ${UPGRADE} ;then
             echo " - instalace / upgrade ADSBfwd"
-            wget -q ${INSTALL_URL}/install-adsbfwd.sh -O /tmp/install.tmp
+            if [[ -z ${ADSBFWD_TYPE} ]] && [[ "${ADSBFWDE_TYPE}" == "readsb" ]];then
+                wget -q ${INSTALL_URL}/install-adsbfwd2.sh -O /tmp/install.tmp
+            else
+                wget -q ${INSTALL_URL}/install-adsbfwd.sh -O /tmp/install.tmp
+            fi 
             . /tmp/install.tmp
             rm -f /tmp/install.tmp
         fi
@@ -1277,12 +1593,83 @@ function install_mlatclient(){
     fi
 }
 
+# Lighttpd
+install_lighttpd(){
+    echo
+    echo -n "Lighttpd"
+    if [[ "${LIGHTTPD}" == "disable" ]] || [[ "${LIGHTTPD}" == "enable" ]];then
+        UnitFileState=$(systemctl show ${LIGHTTPD_NAME} | grep "UnitFileState" | awk -F = '{print $2}' )
+        if [[ "${UnitFileState}" == "" ]] || ${UPGRADE} ;then
+            echo " - instalace / upgrade Lighttpd"
+            $SUDO apt install -y lighttpd
+            echo " - kopiruji dasboard"
+            $SUDO wget -q ${INSTALL_URL}/web/index.html -O /var/www/html/index.html
+            $SUDO wget -q ${INSTALL_URL}/web/ogn.html -O /var/www/html/ogn.html
+            $SUDO wget -q ${INSTALL_URL}/web/dynamic.cgi -O /var/www/html/dynamic.cgi
+            $SUDO wget -q ${INSTALL_URL}/web/piaware.cgi -O /var/www/html/piaware.cgi
+            $SUDO wget -q ${INSTALL_URL}/web/status.cgi -O /var/www/html/status.cgi
+            $SUDO wget -q ${INSTALL_URL}/web/czadsb_background.jpg -O /var/www/html/czadsb_background.jpg
+            $SUDO wget -q ${INSTALL_URL}/web/czadsb_logo.png -O /var/www/html/czadsb_logo.png
+            $SUDO wget -q ${INSTALL_URL}/web/93-cgi.conf -O /etc/lighttpd/conf-available/93-cgi.conf
+            $SUDO rm -rf /etc/lighttpd/conf-enabled/93-cgi.conf
+            $SUDO ln -s ../conf-available/93-cgi.conf /etc/lighttpd/conf-enabled/93-cgi.conf
+            if [[ "${READSB}" == "disable" ]] || [[ "${READSB}" == "enable" ]];then
+                echo " - nastaveni proxy api pro ReADSB"
+                $SUDO wget -q ${INSTALL_URL}/web/64-readsb.conf -O /etc/lighttpd/conf-available/64-readsb.conf
+                $SUDO rm -rf /etc/lighttpd/conf-enabled/64-readsb.conf
+                $SUDO ln -s ../conf-available/64-readsb.conf /etc/lighttpd/conf-enabled/64-readsb.conf
+            fi
+            if [[ "${RPIMONITOR}" == "disable" ]] || [[ "${RPIMONITOR}" == "enable" ]];then
+                echo " - nastaveni proxy pro Rpimonitor"
+                $SUDO wget -q ${INSTALL_URL}/rpimonitor/68-rpimonitor.conf -O /etc/lighttpd/conf-available/68-rpimonitor.conf
+                $SUDO rm -rf /etc/lighttpd/conf-enabled/68-rpimonitor.conf
+                $SUDO ln -s ../conf-available/68-rpimonitor.conf /etc/lighttpd/conf-enabled/68-rpimonitor.conf
+            fi
+            if [[ "${OGN}" == "disable" ]] || [[ "${OGN}" == "enable" ]];then
+                echo " - nastaveni proxy pro OGN"
+                $SUDO wget -q ${INSTALL_URL}/web/62-ogn.conf -O /etc/lighttpd/conf-available/62-ogn.conf
+                $SUDO rm -rf /etc/lighttpd/conf-enabled/62-ogn.conf
+                $SUDO ln -s ../conf-available/62-ogn.conf /etc/lighttpd/conf-enabled/62-ogn.conf
+            fi
+            [[ "${LIGHTTPD}" == "enable" ]] && $SUDO systemctl reload ${LIGHTTPD_NAME}
+        else
+            echo
+        fi
+        [[ "${UnitFileState}" != "${LIGHTTPD}d" ]] && $SUDO systemctl ${LIGHTTPD} ${LIGHTTPD_NAME}
+    else
+        echo " - instalace neni povolena, neprovadi se zadna zmena."
+    fi
+}
+
+# Tar1090
+install_tar1090(){
+    echo
+    echo -n "Tar1090"
+    if [[ "${TAR1090}" == "disable" ]] || [[ "${TAR1090}" == "enable" ]];then
+        UnitFileState=$(systemctl show ${TAR1090_NAME} | grep "UnitFileState" | awk -F = '{print $2}' )
+        if [[ "${UnitFileState}" == "" ]] || ${UPGRADE} ;then
+            echo " - instalace / upgrade Tar1090"
+            $SUDO bash -c "$(wget -nv -O - https://github.com/wiedehopf/tar1090/raw/master/install.sh)"
+            $SUDO sed -i "s/\/\/PlaneCountInTitle = false.*/PlaneCountInTitle = true;/g" /usr/local/share/tar1090/html/config.js
+            $SUDO sed -i "/^\/\/shareBaseUrl = 'https:\/\/adsb\.lol\/'[^;]*/i shareBaseUrl = 'https://aircrafts.rxw.cz/'" /usr/local/share/tar1090/html/config.js
+            $SUDO sed -i "s/\/\/ imageConfigLink = .*/imageConfigLink = '\/';/g" /usr/local/share/tar1090/html/config.js
+            $SUDO sed -i "s/\/\/ imageConfigText = .*/imageConfigText = 'Local panel';/g" /usr/local/share/tar1090/html/config.js
+        else
+            echo
+        fi
+        [[ "${UnitFileState}" != "${REPORTER}d" ]] && $SUDO systemctl ${REPORTER} ${TAR1090_NAME}
+    else
+        echo " - instalace neni povolena, neprovadi se zadna zmena."
+    fi
+}
+
+
 # RpiMonitor
 function install_rpimonitor(){
     echo 
     echo -n "RpiMonitor (${RPIMONITOR}) "
     if [[ "${RPIMONITOR}" == "disable" ]] || [[ "${RPIMONITOR}" == "enable" ]];then
-        UnitFileState=$(systemctl show rpimonitor.service | grep "UnitFileState" | awk -F = '{print $2}' )
+        UnitFileState=$(systemctl show rpimonitor.service | grep "UnitFileState" | awk -F = '{print $2}')
         if [[ "${UnitFileState}" == "" ]] || ${UPGRADE} ;then
             echo " - instalace / upgrade RpiMonitor"
             wget -q ${INSTALL_URL}/install-rpimonitor.sh -O /tmp/install.tmp
@@ -1293,7 +1680,6 @@ function install_rpimonitor(){
 #if [[ $(grep "addons-piaware.conf" /etc/rpimonitor/data.conf | wc -l) -eq 0 ]];then
 #    $SUDO sh -c 'echo "include=/etc/rpimonitor/template/addons-piaware.conf" >> /etc/rpimonitor/data.conf'
 #fi
-            
         fi
        [[ "${UnitFileState}" != "${RPIMONITOR}d" ]] && $SUDO systemctl ${RPIMONITOR} rpimonitor.service
     else
@@ -1394,16 +1780,17 @@ install_piaware(){
 # Reporter
 install_reporter(){
     echo
-    echo -n "Reporter"
+    echo -n "Reporter "
     if [[ "${REPORTER}" == "disable" ]] || [[ "${REPORTER}" == "enable" ]];then
-        UnitFileState=$(systemctl show reporter.timer | grep "UnitFileState" | awk -F = '{print $2}' )
+        UnitFileState=$(systemctl show reporter.timer | grep "UnitFileState" | awk -F = '{print $2}')
         if [[ "${UnitFileState}" == "" ]] || ${UPGRADE} ;then
             echo " - instalace / upgrade Reporter"
             wget -q ${INSTALL_URL}/install-reporter.sh -O /tmp/install.tmp
             . /tmp/install.tmp
             rm -f /tmp/install.tmp
         fi
-        [[ "${UnitFileState}" != "${REPORTER}d" ]] && $SUDO systemctl ${REPORTER} rpimonitor.timer
+        [[ "${UnitFileState}" != "${REPORTER}d" ]] && $SUDO systemctl ${REPORTER} reporter.timer
+        echo
     else
         echo " - instalace neni povolena, neprovadi se zadna zmena."
     fi
@@ -1456,12 +1843,21 @@ install_adsbexchange(){
     fi
 }
 
+
+UPDATE_LIGHTTPD=false
+UPDATE_TAR1090=false
+
 # Funkce postupne pusti jednotlive instalacni skrypty, pokud je na nich zaznamenana zmena
 function install_select(){
+    [[ "${STATION_UPGRADE}" == "auto" ]] && UPDATE_UPGRADE=true 
     if ${UPGRADE_ALL} ;then
+        install_upgrade && UPDATE_UPGRADE=false
         install_dump1090 && UPDATE_DUMP1090=false
+        install_readsb && UPDATE_READSB=false
         install_adsbfwd && UPDATE_ADSBFWD=false
         install_mlatclient && UPDATE_MLAT=false
+        install_lighttpd && UPDATE_LIGHTTPD=false
+        install_tar1090 && UPDATE_TAR1090=false
         install_rpimonitor && UPDATE_RPIMONITOR=false
         install_n2nvpn && UPDATE_N2NVPN=false
         install_ogn && UPDATE_OGN=false
@@ -1470,20 +1866,72 @@ function install_select(){
         install_fr24 && UPDATE_FR24=false
         install_adsbexchange && UPDATE_ADSBEXCHANGE=false
     else
+        ${UPDATE_UPGRADE} && install_upgrade && UPDATE_UPGRADE=false
         ${UPDATE_DUMP1090} && install_dump1090 && UPDATE_DUMP1090=false
+        ${UPDATE_READSB} && install_readsb && UPDATE_READSB=false
         ${UPDATE_ADSBFWD} && install_adsbfwd && UPDATE_ADSBFWD=false
         ${UPDATE_MLAT} && install_mlatclient && UPDATE_MLAT=false
+        ${UPDATE_LIGHTTPD} && install_lighttpd && UPDATE_LIGHTTPD=false
+        ${UPDATE_TAR1090} && install_tar1090 && UPDATE_TAR1090=false
         ${UPDATE_RPIMONITOR} && install_rpimonitor && UPDATE_RPIMONITOR=false
         ${UPDATE_N2NVPN} && install_n2nvpn && UPDATE_N2NVPN=false
         ${UPDATE_OGN} && install_ogn && UPDATE_OGN=false
         ${UPDATE_PIAWARE} && install_piaware && UPDATE_PIAWARE=false
-        ${UPDATE_REPORTER} && install_reporter || UPDATE_REPORTER=false
+        ${UPDATE_REPORTER} && install_reporter && UPDATE_REPORTER=false
         ${UPDATE_FR24} && install_fr24 && UPDATE_FR24=false
-        ${UPDATE_ADSBEXCHANGE} && install_adsbexchange || UPDATE_ADSBEXCHANGE=false
+        ${UPDATE_ADSBEXCHANGE} && install_adsbexchange && UPDATE_ADSBEXCHANGE=false
     fi
     UPGRADE=false
     UPGRADE_ALL=false
 }
+
+# Funkce pro upgrade na verzi 3, jen AdsbFWD
+function upgrade_adsbfwd(){
+    ADSBFWD="enable"
+    ADSBFWD_TYPE="readsb"
+    ADSBFWD_SRC="127.0.0.1,30005,beast_in"
+    ADSBFWD_DST="feed.czadsb.cz,30004"
+    ADSBFWD_BAC="feed.rxw.cz,30004"
+    CFG_VERSION=3
+    set_readsb "${EXPERT}"
+    install_adsbfwd && UPDATE_ADSBFWD=false
+    CFG_VERSION=3
+}
+
+# Funkce pro upgrade na verzi 4, bez AdsbFWD
+function upgrade_czadsb(){
+    if [[ "$ADSBFWD}" == "disable" ]] || [[ "${ADSBFWD}" == "enable" ]];then    # Pokud je nainstalovan AdsbFWD, vypni, smaz, ..
+        echo "- Vypinam sluzbu ${ADSBFWD_NAME}"
+        $SUDO systemctl stop ${ADSBFWD_NAME}.service
+        $SUDO systemctl disable ${ADSBFWD_NAME}.service 
+        $SUDO rm -f /lib/systemd/system/${ADSBFWD_NAME}.service
+        $SUDO systemctl daemon-reload    
+        ADSBFWD="notinstall"
+        ADSBFWD_TYPE="direct"
+    else
+        echo "- Sluzbu ${ADSBFWD_NAME} neni nainstalovana"
+        ADSBFWD="notinstall"
+        ADSBFWD_TYPE="direct"
+    fi
+    if [[ "${DUMP1090}" == "disable" ]] || [[ "${DUMP1090}" == "enable" ]];then # Pokud je instalace Dump1090, vypni
+        echo "- Vypinam sluzbu ${DUMP1090_NAME}"
+        $SUDO systemctl stop ${DUMP1090_NAME}.service
+        $SUDO systemctl disable ${DUMP1090_NAME}.service 
+        DUMP1090="install"
+    else
+        echo "- Sluzbu ${DUMP1090_NAME} neni nainstalovana"
+        DUMP1090="notinstall"
+    fi
+    READSB="enable"
+    set_readsb "${EXPERT}"
+    CFG_VERSION=4
+    set_readsb "${EXPERT}" 
+    set_tar1090 "${EXPERT}"
+    ${UPDATE_READSB} && install_readsb && UPDATE_READSB=false
+    ${UPDATE_LIGHTTPD} && install_lighttpd && UPDATE_LIGHTTPD=false
+    ${UPDATE_TAR1090} && install_tar1090 && UPDATE_TAR1090=false
+}
+
 # ------------------------ Konec definic funkci --------------------------------
 
 # Menu pro sluzby tretich stran
@@ -1509,7 +1957,12 @@ function offer_third(){
     done
 }
 
-# ---------------------- Zacatek vlastnoho skriptu -----------------------------
+# +=============================================================================+
+# |                                                                             |
+# |                      Zacatek vlastnoho skriptu                              |
+# |                                                                             |
+# +=============================================================================+
+
 # Over prava na uzivatele root, pripadne nastav sudo
 if [ "$(id -u)" != "0" ];then
     echo
@@ -1547,8 +2000,9 @@ if [ -s ${CFG} ];then
     $SUDO dos2unix ${CFG}
     . ${CFG}
     CFG_NEW="false"
+    [[ -z ${CFG_VERSION} ]] &&  CFG_VERSION=2
 # Over verzi cfg Upravit: VPNEDGE ; LOCAL ; DUMP1090    
-    
+
 else
     $SUDO touch ${CFG}
     $SUDO chmod 666 ${CFG}
@@ -1560,6 +2014,9 @@ else
         [[ -n ${N2N_IP} ]] && LOCAL=${N2N_IP}
         [[ "${MM2_ENABLE_OUTCONNECT}" == "yes" ]] && ADSBFWD="enable"
         [[ -n ${MM2_OUTCONNECT_PORT} ]] && DESTINATION="czadsb.cz:${MM2_OUTCONNECT_PORT}"
+        [[ -z ${CFG_VERSION} ]] &&  CFG_VERSION=1
+    else
+        CFG_VERSION=4
     fi
 fi
 
@@ -1569,9 +2026,13 @@ set_default
 # Vynuluj informaci ktere sluzby se maji instalocat / modifikovat
 UPGRADE=false
 UPGRADE_ALL=false
+UPDATE_UPGRADE=false
 UPDATE_DUMP1090=false
+UPDATE_READSB=false
 UPDATE_ADSBFWD=false
 UPDATE_MLAT=false
+UPDATE_LIGHTTPD=false
+UPDATE_TAR1090=false
 UPDATE_RPIMONITOR=false
 UPDATE_N2NVPN=false
 UPDATE_OGN=false
@@ -1580,8 +2041,62 @@ UPDATE_REPORTER=false
 UPDATE_FR24=false
 UPDATE_ADSBEXCHANGE=false
 
+# Test na verzi CFG a nabidka prislusneho upgrade
+if [[ ${CFG_VERSION} -eq 2 ]];then
+    READSB="notinstall"
+    ADSBFWD_TYPE="adsbfwd"
+    if [[ "$ADSBFWD}" == "disable" ]] || [[ "${ADSBFWD}" == "enable" ]];then        # Pokud je nainstalovan AdsbFWD, doporuceny upgrade
+        if [[ "${DUMP1090}" == "disable" ]] || [[ "${DUMP1090}" == "enable" ]];then # prokud byl instalovan DUM1090 skripte, tak na v.4
+            printf "┌──────────────────────  Upgrade na verzi 4 CzADSB  ───────────────────────┐\n"
+            printf "│ Na vasem systemu je doporucen upgrade ze stavajiciho DUMP1090 na ReADSB. │\n"
+            printf "│ Pokud byla provedena predchozi instalace skriptem CzADSB, melo by to byt │\n"
+            printf "│ bezpecne a upgrade doporucujeme !                                        │\n"
+            printf "├──────────────────────────────────────────────────────────────────────────┘\n"
+            input  "* Muzeme provest upgrade na novou verzi ? [Y/n]:" '^[ynYN]*$' "y"
+            if [[ "$X" == "y" ]] || [[ "$X" == "Y" ]];then
+                upgrade_czadsb
+            else
+                printf "┌──────────────────────  Upgrade na verzi 3 CzADSB  ───────────────────────┐\n"
+                printf "│ Z duvodu  prechodu na identifikaci prijmace podle uuid je doporuceno bud │\n"
+                printf "│ upgrade celeho systemu na nejnovejsi,  nebo alespon stavajiciho AdsbFWD. │\n"
+                printf "├──────────────────────────────────────────────────────────────────────────┘\n"
+                input  "* Muzeme provest zatim upgrade AdsbFWD ? [Y/n]:" '^[ynYN]*$' "y"
+                if [[ "$X" == "y" ]] || [[ "$X" == "Y" ]];then
+                    upgrade_adsbfwd
+                fi
+            fi
+        else                                                                        # Pokud neni Dump1090 instalovan skriptem, tak jen v.3
+            READSB="notinstall"
+            printf "┌──────────────────────  Upgrade na verzi 3 CzADSB  ───────────────────────┐\n"
+            printf "│ Z duvodu  prechodu na identifikaci prijmace podle uuid je doporuceno bud │\n"
+            printf "│ upgrade celeho systemu na nejnovejsi,  nebo alespon stavajiciho AdsbFWD. │\n"
+            printf "├──────────────────────────────────────────────────────────────────────────┘\n"
+            input  "* Muzeme provest zatim upgrade AdsbFWD ? [Y/n]:" '^[ynYN]*$' "y"
+            if [[ "$X" == "y" ]] || [[ "$X" == "Y" ]];then
+                upgrade_adsbfwd
+            fi
+        fi
+    fi
+    set_cfg
+fi
+
 # V pripade nove instalace spust pruvodce
 if ${CFG_NEW} ;then
+    check=`netstat -tln | grep 80`                                              # Over, zda jiz neni obsazen port 80 (web) a zda nejsou nainstalovane web servery
+    [[ ${#check} -ge 10 ]] &&  LIGHTTPD="install"
+    command -v lighttpd &>/dev/null &&  LIGHTTPD="install"
+    command -v apache2  &>/dev/null &&  LIGHTTPD="install"
+    command -v nginx    &>/dev/null &&  LIGHTTPD="install"
+    check=`netstat -tln | grep 30005`                                           # Over zda neni obsazen port 30005 a neni nainstalovan jiz dump, nebo readsb
+    [[ ${#check} -ge 10 ]] &&  DUMP1090="install" && READSB="install"
+    command -v readsb      &>/dev/null &&  DUMP1090="install" && READSB="install"
+    command -v dump1090    &>/dev/null &&  DUMP1090="install" && READSB="install"
+    command -v dump1090-fe &>/dev/null &&  DUMP1090="install" && READSB="install"
+    if [[ "${DUMP1090}" == "install" ]] || [[ "${READSB}" == "install" ]];then
+        ADSBFWD_TYPE="readsb"
+    else
+        ADSBFWD_TYPE="direct"
+    fi
     clear
     info_logo; info_system; info_rtlsdr
     info_newinst
@@ -1589,16 +2104,23 @@ if ${CFG_NEW} ;then
     set_identifikace
 # set old set   report=$(curl -d "user=${USER_EMAIL}&statiom=${STATION_NAME}" -X POST ${REPORTER_URL})
     set_lokalizace
-    set_dump1090 "${EXPERT}"
-    set_adsbfwd "${EXPERT}"
+    if [[ ${CFG_VERSION} -eq 4 ]];then   # Pro vezi 4 se jiz nepouzije Dump1090 a AdsbFWD
+        set_readsb "${EXPERT}" 
+        set_tar1090 "${EXPERT}"
+    else
+        set_dump1090 "${EXPERT}"
+        set_adsbfwd "${EXPERT}"
+    fi
     set_mlat "${EXPERT}"
     set_rpimonitor
     set_n2nvpn
     set_reporter
+    set_upgrade
     set_cfg
     info_install
     UPGRADE=true
     install_select
+    input "Pro pokracovani stiskni enter ..."
 fi
 
 while true; do
@@ -1618,14 +2140,22 @@ while true; do
             set_lokalizace
         ;;
         3)  clear; info_logo
-            set_dump1090
-            [[ "${DUMP1090}" == "install" ]] && sleep 4 
+            if [[ ${CFG_VERSION} -eq 4 ]];then
+                set_readsb
+            else
+                set_dump1090
+                [[ "${DUMP1090}" == "install" ]] && sleep 4
+            fi 
         ;;
         4)  clear; info_logo
             set_rtl_sn
         ;;
         5)  clear; info_logo
-            set_adsbfwd
+            if [[ ${CFG_VERSION} -eq 4 ]];then
+                set_tar1090
+            else
+                set_adsbfwd
+            fi            
         ;;
         6)  clear; info_logo
             set_n2nvpn
@@ -1661,6 +2191,9 @@ while true; do
         r)  info_exit
             install_select
             $SUDO reboot
+        ;;
+        s)  clear; info_logo
+            set_upgrade            
         ;;
         x)  $SUDO rm ${CFG}
              exit 0

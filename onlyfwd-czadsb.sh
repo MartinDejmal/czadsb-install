@@ -1,9 +1,9 @@
 #!/bin/bash
 # Zjednoduseny instalacni skript z rucni konfiguraci kde jiz dump1090 bezi.
-# Instaluje jen mlat-client z deb balicku a adsbfwd.
+# Instaluje jen mlat-client z deb balicku a readsb (drive adsbfwd).
 #
 # Instalace:
-#   bash -c "$(wget -nv -O - https://rxw.cz/adsb/onlyfwd-czadsb.sh)"
+#   bash -c "$(wget -nv -O - https://rxw.cz/adsb/onlyfwd-czadsb2.sh)"
 
 # Neco k nastaveni
 URL_DEB="https://rxw.cz/dists"
@@ -11,7 +11,7 @@ MLAT_V="0.2.13"
 SUDO="sudo"
 
 # Nacti vybranou adresu
-#URL_FWD="https://rxw.cz/adsb/install/install-adsbfwd.sh"
+#URL_FWD="https://rxw.cz/adsb/install/install-adsbfwd2.sh"
 URL_FWD="https://raw.githubusercontent.com/Tydyt-cz/czadsb-install/refs/heads/main/install/install-adsbfwd.sh"
 #URL_FWD="https://raw.githubusercontent.com/CZADSB/czadsb-install/refs/heads/main/install/install-adsbfwd.sh"
 
@@ -22,9 +22,9 @@ echo
 echo "Detekovan system: ${PRETTY_NAME} - ${ARCH}"
 echo
 
-# Nainstaluj ADSBfwd a teprve pote mlat
+# Nainstaluj ReADSB - CzADSBfwd a teprve pote mlat
 echo
-echo "* Stahuji a spoustim instalaci ADSBfwd"
+echo "* Stahuji a spoustim instalaci CzADSBfwd"
 wget -q ${URL_FWD} -O /tmp/install.tmp
 . /tmp/install.tmp
 rm -f /tmp/install.tmp
@@ -40,7 +40,7 @@ WGET_URL="${URL_DEB}/${VERSION_CODENAME}/mlat-client-dbgsym_${MLAT_V}_${ARCH}.de
 echo "* Ztahuji ${WGET_URL}"
 wget -nv ${WGET_URL}
 
-if [ -f ./mlat-client_${MLAT_V}_${ARCH}.deb ] && [ -f ./mlat-client-dbgsym_${MLAT_V}_${ARCH}.deb ]; then
+if [ -f ./mlat-client_${MLAT_V}_${ARCH}.deb ]; then
     echo
     echo "* Instaluji mlat klienta"
     $SUDO dpkg -i mlat-client*.deb
@@ -54,5 +54,5 @@ fi
 echo
 echo "Je nutne nakonfigurovat:"
 echo " - /etc/default/mlat-client"
-echo " - /etc/default/adsbfwd"
+echo " - /etc/default/czadsbfwd"
 
