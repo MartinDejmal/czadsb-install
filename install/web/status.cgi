@@ -10,21 +10,20 @@ else
     CPU_TEMP="N/A"
 fi
 
-# Barva teploty (Debian/Bash bezpečný zápis)
+# Barva teploty (Debian/Bash bezpecny zapis)
 if [ "$CPU_TEMP" != "N/A" ]; then
-    IS_HIGH=$(echo "$CPU_TEMP > 75" | bc -l)
-    IS_WARN=$(echo "$CPU_TEMP > 60" | bc -l)
-    if [ "$IS_HIGH" -eq 1 ]; then T_COL="#ff4444";
-    elif [ "$IS_WARN" -eq 1 ]; then T_COL="#ffbb33";
+    CPU_COL=$(awk "BEGIN {printf \"%.0f\", $RAW_TEMP/1000}")
+    if [ "$CPU_COL" -gt 75 ]; then T_COL="#ff4444";
+    elif [ "$CPU_COL" -gt 60 ]; then T_COL="#ffbb33";
     else T_COL="#ffffff"; fi
 else
     T_COL="#ffffff"
 fi
 
-# --- 2. Vytížení procesoru (Load) ---
+# --- 2. Vytizeni procesoru (Load) ---
 CPU_LOAD=$(cat /proc/loadavg | cut -d' ' -f1)
 
-# --- 3. Paměť RAM ---
+# --- 3. Pamet RAM ---
 MEM_TOTAL=$(free -m | awk '/Mem:/ {print $2}')
 MEM_USED=$(free -m | awk '/Mem:/ {print $3}')
 MEM_PCT=$(( MEM_USED * 100 / MEM_TOTAL ))
@@ -33,7 +32,7 @@ if [ "$MEM_PCT" -gt 90 ]; then M_COL="#ff4444";
 elif [ "$MEM_PCT" -gt 75 ]; then M_COL="#ffbb33";
 else M_COL="#ffffff"; fi
 
-# --- 4. Využití disku (/) ---
+# --- 4. Vyuziti disku (/) ---
 DISK_INFO=$(df -h / | awk 'NR==2 {print $2 " " $3 " " $5}')
 DISK_TOTAL=$(echo $DISK_INFO | cut -d' ' -f1)
 DISK_USED=$(echo $DISK_INFO | cut -d' ' -f2)

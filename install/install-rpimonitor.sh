@@ -31,11 +31,14 @@ $SUDO /usr/share/rpimonitor/scripts/updatePackagesStatus.pl
 $SUDO /etc/init.d/rpimonitor update
 rm rpimonitor_latest.deb
 
-echo "* Nastaveni jazykoveho prostredi"
-sudo sed -i 's/^# \(cs_CZ.UTF-8 UTF-8\)/\1/' /etc/locale.gen                    # 1. Odkomentování požadovaných jazykù v souboru /etc/locale.gen
-sudo sed -i 's/^# \(en_GB.UTF-8 UTF-8\)/\1/' /etc/locale.gen
-sudo locale-gen                                                                 # 2. Vygenerování zvolených locales
-sudo update-locale LANG=cs_CZ.UTF-8 LC_ALL=cs_CZ.UTF-8                          # 3. Nastavení výchozího jazyka systému
+grep '# cs_CZ.UTF-8 UTF-8' /etc/locale.gen
+if [ "$?" == "0" ];then
+    echo "* Nastaveni jazykoveho prostredi"
+    sudo sed -i 's/^# \(cs_CZ.UTF-8 UTF-8\)/\1/' /etc/locale.gen                # 1. Odkomentování požadovaných jazykù v souboru /etc/locale.gen
+    sudo sed -i 's/^# \(en_GB.UTF-8 UTF-8\)/\1/' /etc/locale.gen
+    sudo locale-gen                                                             # 2. Vygenerování zvolených locales
+    sudo update-locale LANG=cs_CZ.UTF-8 LC_ALL=cs_CZ.UTF-8                      # 3. Nastavení výchozího jazyka systému
+fi
 
 echo "* Donastaveni RpiMonotru"
 # Zobrazeni top3 aplikaci (presmerovani generovane stranky na shm)

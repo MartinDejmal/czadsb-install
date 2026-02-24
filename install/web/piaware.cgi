@@ -1,10 +1,9 @@
 #!/bin/bash
 
-# 3. HTTP Hlavičky (odesíláme jen když budeme skutečně vypisovat HTML)
 echo "Content-type: text/html"
 echo ""
 
-# 1. Načtení a validace konfigurace
+# 1. Nacteni a validace konfigurace
 CONF="/etc/default/czadsb.cfg"
 PIAWARE_STATE="none"
 
@@ -24,7 +23,7 @@ if [ ! -f "$JSON_FILE" ]; then
     exit 0
 fi
 
-# --- Pomocné funkce pro parsování ---
+# --- Pomocne funkce pro parsovani ---
 get_val()  { grep -Po "\"$1\"\s*:\s*\"\K[^\"]+" "$JSON_FILE"; }
 get_num()  { grep -Po "\"$1\"\s*:\s*\K[0-9]+" "$JSON_FILE"; }
 get_bool() { grep -Po "\"$1\"\s*:\s*\K[a-z]+" "$JSON_FILE"; }
@@ -40,7 +39,7 @@ get_color() {
     esac
 }
 
-# --- Logika pro expiraci PiAware tlačítka ---
+# --- Logika pro expiraci PiAware tlacitka ---
 EXPIRY=$(get_num "expiry")
 NOW=$(date +%s%3N)
 [ ${#NOW} -lt 13 ] && NOW=$(($(date +%s) * 1000))
@@ -55,7 +54,7 @@ fi
 
 # --- Generování HTML ---
 
-# Hlavní tlačítko PiAware
+# Hlavni tlacitko PiAware
 SITE_URL=$(get_val "site_url")
 echo "<a href=\"$SITE_URL\" target=\"_blank\" class=\"btn\" style=\"border-color: $PIA_COLOR;\">PiAware</a>"
 

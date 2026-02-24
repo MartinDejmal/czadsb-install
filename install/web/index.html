@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CzADSB.CZ - Lokální přijímač</title>
+    <style>
+        body {
+            margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), 
+                        url('/czadsb_background.jpg') no-repeat center center fixed;
+            background-size: cover; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: white; text-align: center;
+        }
+        .logo { position: absolute; top: 20px; left: 20px; max-width: 200px; }
+        h1 { font-size: 3rem; margin-bottom: 30px; text-shadow: 2px 2px 10px rgba(0,0,0,0.8); }
+
+        /* Hlavní kontejner pro všechny řádky */
+        .container { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+            width: 90%; 
+            max-width: 600px; 
+        }
+
+        /* Styl pro jeden řádek */
+        .row {
+            display: flex;
+            flex-direction: row; /* Tlačítka vedle sebe */
+            gap: 12px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* Styl pro tlačítko */
+        .btn {
+            flex: 1; /* Tlačítka v řádku budou stejně široká */
+            display: block; padding: 15px 10px; color: white; text-decoration: none;
+            border-radius: 50px; border: 2px solid rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(5px);
+            font-weight: bold; transition: 0.3s;
+            font-size: 0.95rem;
+            white-space: nowrap; /* Text zůstane na jednom řádku */
+        }
+
+        /* Tlačítko, které má být přes celou šířku */
+        .full-width { flex: none; width: 100%; }
+
+        .btn:hover { background: rgba(255,255,255,0.9); color: black; transform: scale(1.02); }
+
+        /* Responzivita: Na malých displejích budou tlačítka pod sebou */
+        @media (max-width: 480px) {
+            .row { flex-direction: column; }
+            h1 { font-size: 2.2rem; }
+        }
+
+        /* Styl pro zápatí (stavový řádek) */
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5); /* Poloprůhledné černé pozadí */
+            backdrop-filter: blur(10px);    /* Rozmazání pozadí pod lištou */
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 5px;
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            z-index: 100;
+            flex-wrap: wrap; /* Umožní zalomení na velmi malých displejích */
+            gap: 10px;
+        }
+
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 80px; /* Zajistí, že se text nesrazí */
+        }
+
+        .status-label {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 3px;
+            letter-spacing: 0.5px;
+        }
+
+        .status-value {
+            font-weight: 600;
+            white-space: nowrap; /* Zabrání zalomení hodnoty jako "940 / MB" */
+        }
+
+        /* Na mobilech zmenšíme písmo, aby se to vešlo */
+        @media (max-width: 600px) {
+            footer { padding: 8px 5px; }
+            .status-item { min-width: 60px; }
+            .status-value { font-size: 0.75rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <a href="https://czadsb.cz"><img src="/czadsb_logo.png" alt="Logo" class="logo"></a>
+
+    <div class="container">
+
+        <!-- PRVNÍ ŘÁDEK: Dvě tlačítka vedle sebe -->
+        <div class="row" style="margin-top: 20px;">
+            <a href="/tar1090" class="btn">Lokalní mapa letadel</a>
+            <a href="/tar1090/?pTracks" class="btn">Lokalní mapa letů</a>
+        </div>
+
+        <!-- DRUHÝ ŘÁDEK: Jedno tlačítko na celou šířku -->
+        <div class="row" style="margin-top: 20px;">
+            <a href="https://czadsb.cz" class="btn full-width">Mapa pro členy CzADSB</a>
+        </div>
+    </div>
+
+    <h1>CzADSB.CZ</h1>
+
+    <div class="container">
+
+        <!-- TŘETÍ ŘÁDEK: Dynamický obsah (dočítá se přes JS) -->
+        <div id="dynamic-content-row" class="row" style="margin-top: 20px;">
+        </div>
+
+        <!-- ČTVRTÝ ŘÁDEK: PiAware Status (dočítá se přes JS) -->
+        <div id="piaware-status-row" class="row" style="margin-top: 20px;">
+        </div>
+
+    </div>
+
+    <footer id="system-footer">
+    </footer>
+
+    <script>
+        function updateDynamicContent() {
+            fetch('dynamic.cgi')
+                .then(response => response.text())
+                .then(html => {
+                    // Pokud je skript prázdný, řádek schováme, aby nezabíral místo
+                    const container = document.getElementById('dynamic-content-row');
+                    if(html.trim() === "") {
+                        container.style.display = "none";
+                    } else {
+                        container.style.display = "flex";
+                        container.innerHTML = html;
+                    }
+                })
+                .catch(err => console.error('Chyba aktualizace:', err));
+        }
+        updateDynamicContent();
+        setInterval(updateDynamicContent, 10000);
+
+        function updatePiAware() {
+            fetch('piaware.cgi')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('piaware-status-row').innerHTML = html;
+                });
+        }
+        updatePiAware();
+        setInterval(updatePiAware, 5000); // Aktualizace každých 10s
+
+        function updateSystemStatus() {
+            fetch('status.cgi')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('system-footer').innerHTML = html;
+                });
+        }
+        updateSystemStatus();
+        setInterval(updateSystemStatus, 5000); // Systémové info stačí aktualizovat každých 5s
+    </script>
+
+</body>
+</html>

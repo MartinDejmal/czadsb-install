@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Vynucení standardního C prostředí (tečky v číslech)
+# Vynucení standardního C prostredi (tecky v cislech)
 export LC_ALL=C
 
 # HTTP Hlavičky
@@ -8,7 +8,7 @@ echo "Content-type: application/json"
 echo "Access-Control-Allow-Origin: *"
 echo ""
 
-# --- 1. Výpočet vytížení CPU ---
+# --- 1. Vypocet vytizeni CPU ---
 get_cpu_ticks() {
     grep '^cpu ' /proc/stat | awk '{print $2+$3+$4+$5+$6+$7+$8+$9+$10, $5+$6}'
 }
@@ -39,16 +39,16 @@ LOAD1=$(printf "%.2f" "$L1")
 LOAD5=$(printf "%.2f" "$L5")
 LOAD15=$(printf "%.2f" "$L15")
 
-# --- 4. Paměť RAM (MB) ---
+# --- 4. Pameti RAM (MB) ---
 read -r MEM_TOTAL MEM_USED MEM_FREE MEM_BUFF < <(free -m | awk '/Mem:/ {print $2, $3, $4, $6}')
 
 # --- 5. Disk (/) v MB ---
 read -r DISK_TOTAL DISK_USED DISK_PCT < <(df -m / | awk 'NR==2 {print $2, $3, $5}' | tr -d '%')
 
-# --- 6. Uptime (v sekundách) ---
+# --- 6. Uptime (v sekundach) ---
 UPTIME_SEC=$(cut -d' ' -f1 /proc/uptime)
 
-# --- GENEROVÁNÍ ZPLOŠTĚLÉHO JSONU ---
+# --- GENEROVANI ZPLOSTELEHO JSONU ---
 cat <<EOF
 {
   "uptime_seconds": $UPTIME_SEC,

@@ -8,8 +8,8 @@ CFG="/etc/default/czadsb.cfg"
 
 
 # Cesta k instalacnim skriptum
-#INSTALL_URL="https://rxw.cz/adsb/install"
-INSTALL_URL="https://raw.githubusercontent.com/Tydyt-cz/czadsb-install/refs/heads/main/install"
+INSTALL_URL="https://rxw.cz/adsb/install"
+#INSTALL_URL="https://raw.githubusercontent.com/Tydyt-cz/czadsb-install/refs/heads/main/install"
 #INSTALL_URL="https://raw.githubusercontent.com/CZADSB/czadsb-install/refs/heads/main/install"
 
 # echo ${{ vars.URL_SCRIPTS }}
@@ -310,8 +310,12 @@ function info_components() {
 
     # Prefixy služeb, které chceme dynamicky zachytit
     # Stačí přidat prefix do pole
-    local prefixes=(
-        "dump1090"
+    if [[ "${READSB}" != "enable" ]];then
+        local prefixes=("dump1090")
+    else
+        local prefixes=()
+    fi
+    local prefixes+=(
         "readsb"
         "tar1090"
         "adsbfwd"
@@ -1843,10 +1847,6 @@ install_adsbexchange(){
     fi
 }
 
-
-UPDATE_LIGHTTPD=false
-UPDATE_TAR1090=false
-
 # Funkce postupne pusti jednotlive instalacni skrypty, pokud je na nich zaznamenana zmena
 function install_select(){
     [[ "${STATION_UPGRADE}" == "auto" ]] && UPDATE_UPGRADE=true 
@@ -1927,9 +1927,11 @@ function upgrade_czadsb(){
     CFG_VERSION=4
     set_readsb "${EXPERT}" 
     set_tar1090 "${EXPERT}"
+    UPGRADE=true
     ${UPDATE_READSB} && install_readsb && UPDATE_READSB=false
     ${UPDATE_LIGHTTPD} && install_lighttpd && UPDATE_LIGHTTPD=false
     ${UPDATE_TAR1090} && install_tar1090 && UPDATE_TAR1090=false
+    UPGRADE=false
 }
 
 # ------------------------ Konec definic funkci --------------------------------
@@ -1974,6 +1976,16 @@ fi
 
 # Nastav /usr/bin/ skripy czadsb pro snassi spousteni
 set_czadsb
+
+# Nastav ceskou znakovou sadu
+grep '# cs_CZ.UTF-8 UTF-8' /etc/locale.gen
+if [ "$?" == "0" ];then
+    echo "* Nastaveni jazykoveho prostredi"
+    sudo sed -i 's/^# \(cs_CZ.UTF-8 UTF-8\)/\1/' /etc/locale.gen                # 1. Odkomentování požadovaných jazyků v souboru /etc/locale.gen
+    sudo sed -i 's/^# \(en_GB.UTF-8 UTF-8\)/\1/' /etc/locale.gen
+    sudo locale-gen                                                             # 2. Vygenerování zvolených locales
+    sudo update-locale LANG=cs_CZ.UTF-8 LC_ALL=cs_CZ.UTF-8                      # 3. Nastavení výchozího jazyka systému
+fi
 
 # Over nainstalovani rtl sdr ovladacu a pripadne je doinstaluj
 if ! command -v rtl_test &>/dev/null ;then
@@ -2177,7 +2189,7 @@ while true; do
         d)  clear; info_logo
             set_reporter
         ;;
-        u)  UPGRADE_ALL=true
+        u)  UPGRADE_ALL=true; UPGRADE=true
             install_select
             echo; input "Pro pokracovani stiskni enter ..."
         ;;
