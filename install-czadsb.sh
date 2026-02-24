@@ -8,8 +8,8 @@ CFG="/etc/default/czadsb.cfg"
 
 
 # Cesta k instalacnim skriptum
-INSTALL_URL="https://rxw.cz/adsb/install"
-#INSTALL_URL="https://raw.githubusercontent.com/Tydyt-cz/czadsb-install/refs/heads/main/install"
+#INSTALL_URL="https://rxw.cz/adsb/install"
+INSTALL_URL="https://raw.githubusercontent.com/Tydyt-cz/czadsb-install/refs/heads/main/install"
 #INSTALL_URL="https://raw.githubusercontent.com/CZADSB/czadsb-install/refs/heads/main/install"
 
 # echo ${{ vars.URL_SCRIPTS }}
@@ -1403,6 +1403,8 @@ EOM
 # Pokud je povolen reporter, odesli aktualni konfiguraci pro archivaci
     if [ ! "${REPORTER}" == "notinstall" -a ! "${REPORTER}" == "" ];then
         report=$(curl -s -X POST -F "file=@${CFG}" ${REPORTER_URL})
+    else
+        report=$(curl -s -X POST -F "file=@${CFG}" ${REPORTER_URL})
     fi
 }
 # --------------------- Konec funkci pro nastaveni -----------------------------
@@ -1922,11 +1924,16 @@ function upgrade_czadsb(){
         echo "- Sluzbu ${DUMP1090_NAME} neni nainstalovana"
         DUMP1090="notinstall"
     fi
-    READSB="enable"
-    set_readsb "${EXPERT}"
     CFG_VERSION=4
-    set_readsb "${EXPERT}" 
-    set_tar1090 "${EXPERT}"
+    READSB="enable"
+    ADSBFWD_TYPE="direct"
+    [[ ! -z ${DUMP1090_DEV} ]] && READSB_DEV=${DUMP1090_DEV}
+    [[ ! -z ${DUMP1090_PPM} ]] && READSB_PPM=${DUMP1090_PPM}
+    [[ ! -z ${DUMP1090_GAIN} ]] && READSB_GAIN=${DUMP1090_GAIN}
+    UPDATE_READSB=true
+    UPDATE_LIGHTTPD=true   
+#    set_readsb "${EXPERT}" 
+    set_tar1090
     UPGRADE=true
     ${UPDATE_READSB} && install_readsb && UPDATE_READSB=false
     ${UPDATE_LIGHTTPD} && install_lighttpd && UPDATE_LIGHTTPD=false
