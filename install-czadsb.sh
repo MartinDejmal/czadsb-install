@@ -8,8 +8,8 @@ CFG="/etc/default/czadsb.cfg"
 
 
 # Cesta k instalacnim skriptum
-#INSTALL_URL="https://rxw.cz/adsb/install"
-INSTALL_URL="https://raw.githubusercontent.com/Tydyt-cz/czadsb-install/refs/heads/main/install"
+INSTALL_URL="https://rxw.cz/adsb/install"
+#INSTALL_URL="https://raw.githubusercontent.com/Tydyt-cz/czadsb-install/refs/heads/main/install"
 #INSTALL_URL="https://raw.githubusercontent.com/CZADSB/czadsb-install/refs/heads/main/install"
 
 # echo ${{ vars.URL_SCRIPTS }}
@@ -91,7 +91,7 @@ function set_default(){
     [[ -z ${READSB_GAIN} ]] && READSB_GAIN="auto"
     # Vychozi adresa pro odesilani ADSB dat
     [[ -z ${READSB_DST} ]] && READSB_DST="feed.czadsb.cz,30004"
-    # Vychozi adresa pro odesilani ADSB dat
+    # Zalozni adresa pro odesilani ADSB dat
     [[ -z ${READSB_BCK} ]] && READSB_BCK="feed.rxw.cz,30004"
     # Pridani dalsich voleb pro ReADSB
     [[ -z ${READSB_OPT} ]] && READSB_OPT=""
@@ -106,6 +106,8 @@ function set_default(){
     [[ -z ${ADSBFWD_SRC} ]] && ADSBFWD_SRC="127.0.0.1:30005"
     # Vychozi adresa pro odesilani ADSB dat
     [[ -z ${ADSBFWD_DST} ]] && ADSBFWD_DST="czadsb.cz:50000"
+    # Zalozni adresa pro odesilani ADSB dat
+    [[ -z ${ADSBFWD_BAC} ]] && ADSBFWD_BAC=${READSB_BCK}
 
     # Nazev programu MLAT client
     [[ -z ${MLAT_NAME} ]] && MLAT_NAME="mlat-client"
@@ -1554,8 +1556,8 @@ function install_adsbfwd(){
 
         UnitFileState=$(systemctl show ${ADSBFWD_NAME} | grep "UnitFileState" | awk -F = '{print $2}')
         if [[ "${UnitFileState}" == "" ]] || ${UPGRADE} ;then
-            echo " - instalace / upgrade ADSBfwd"
-            if [[ -z ${ADSBFWD_TYPE} ]] && [[ "${ADSBFWDE_TYPE}" == "readsb" ]];then
+            echo " - instalace / upgrade ADSBfwd type ${ADSBFWDE_TYPE}"
+            if [[ -z ${ADSBFWD_TYPE} ]] && [[ "${ADSBFWD_TYPE}" == "readsb" ]];then
                 wget -q ${INSTALL_URL}/install-adsbfwd2.sh -O /tmp/install.tmp
             else
                 wget -q ${INSTALL_URL}/install-adsbfwd.sh -O /tmp/install.tmp
@@ -1895,9 +1897,10 @@ function upgrade_adsbfwd(){
     ADSBFWD_DST="feed.czadsb.cz,30004"
     ADSBFWD_BAC="feed.rxw.cz,30004"
     CFG_VERSION=3
-    set_readsb "${EXPERT}"
+#    set_readsb "${EXPERT}"
+    UPGRADE=true
     install_adsbfwd && UPDATE_ADSBFWD=false
-    CFG_VERSION=3
+    UPGRADE=false
 }
 
 # Funkce pro upgrade na verzi 4, bez AdsbFWD
