@@ -21,7 +21,8 @@ piaware_git="https://github.com/flightaware/piaware_builder.git"
 # Cesta na prekompilovane bajicky v ramci komunity
 URL_DEB="https://rxw.cz/dists"
 # Instalovana verze PiAware
-PIA_VER="9.0.1"
+#PIA_VER="9.0.1"
+PIA_VER="last"
 
 # ---------------------  Funkce pro lepsi prehled skriptu  ---------------------
 # Instalace repozitare PiAware a instalace jednotlivych komponent
