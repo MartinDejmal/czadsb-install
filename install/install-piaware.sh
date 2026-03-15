@@ -97,11 +97,11 @@ dovnload_piaware_deb(){
     [[ $WGET ]] && wget -nv ${URL_DEB}/${VERSION_CODENAME}/piaware_${PIA_VER}_${ARCH}.deb
     [[ ! "$?" == "0" ]] && WGET=false
     [[ $WGET ]] && wget -nv ${URL_DEB}/${VERSION_CODENAME}/piaware-dbgsym_${PIA_VER}_${ARCH}.deb
-    [[ ! "$?" == "0" ]] && WGET=false
+#    [[ ! "$?" == "0" ]] && WGET=false
     if $WGET ;then
         echo "* Instalace zavislich balicku"
         echo "------------------------------------->"
-        $SUDO apt install -y --no-install-suggests --no-install-recommends itcl3 tcl tcl-tls tcl8.6 tcllib tclx8.4 tcl8.6-dev tcl-tclreadline tcllib-critcl
+        $SUDO apt install -y --no-install-suggests --no-install-recommends itcl3 tcl tcl-tls tcl8.6 tcllib tclx8.4 tcl8.6-dev tcl-tclreadline tcllib-critcl python3-pyasyncore
         echo "-------------------------------------<"
         echo "* Instalace PiAware"
         echo "------------------------------------->"
