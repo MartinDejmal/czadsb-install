@@ -56,6 +56,7 @@ fi
 
 # Hlavni tlacitko PiAware
 SITE_URL=$(get_val "site_url")
+[ -z "$SITE_URL" ] && SITE_URL=SITE_URL="https://flightaware.com/adsb/stats/user/"
 echo "<a href=\"$SITE_URL\" target=\"_blank\" class=\"btn\" style=\"border-color: $PIA_COLOR;\">PiAware</a>"
 
 # Status kontrolky
