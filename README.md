@@ -3,7 +3,7 @@
 ``Předmluva:``
 
 Vzhledem k vývoji byl vytvořen nový pomocný instalační skript pro zdílení ADSB dat ze združením [CzADSB](https://czadsb.cz). 
-Je testován pro nové verze Debian / Rasbian 11 a 12. Základní změny jsou:
+Je testován pro nové verze Debian / Rasbian 12 a 13. Základní změny jsou:
 * Konfigurační soubor je uložen v /etc/default/czadsb.cfg
 * ModeMixer není funkční na nových verzích Debian. Proto skript jej již neinstaluje
 
