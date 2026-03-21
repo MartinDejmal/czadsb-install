@@ -1,0 +1,29 @@
+# MLAT client - konfigurace pro spusteni mlat clienta pro CzADSB
+# 
+# instalace mlat klienta [ notinstall | disable | enable ]
+MLAT="enable"
+
+# Nazev programu MLAT client
+MLAT_NAME="czadsb-mlat"
+
+# pojmenovani prijimace. Max 9 znaku bez mezer
+STATION_NAME=""
+
+# unikatni oznaceni stanice
+STATION_UUID=""
+
+# Lokalizace anteny prijimace. Zemepisne souradnice ve stupnich.
+STATION_LAT="0"
+STATION_LON="0"
+
+# Lokalizace anteny prijimace. Nadmorska vyska v metrech
+STATION_ALT="0"
+
+# adresa MLAT serveru pro vypocet
+MLAT_SERVER="mlat.czadsb.cz:3109"
+
+# adresa pro preposilani zpracovanych dat, nebo port pro cteni zpracovanych dat
+MLAT_RESULT=""
+
+# Format a typ pripojeni pro poskytovani zpracovanych dat
+MLAT_FORMAT="beast,connect"

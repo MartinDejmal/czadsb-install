@@ -8,8 +8,8 @@ CFG="/etc/default/czadsb.cfg"
 
 
 # Cesta k instalacnim skriptum
-#INSTALL_URL="https://rxw.cz/adsb/install"
-INSTALL_URL="https://raw.githubusercontent.com/Tydyt-cz/czadsb-install/refs/heads/main/install"
+INSTALL_URL="https://rxw.cz/adsb/install"
+#INSTALL_URL="https://raw.githubusercontent.com/Tydyt-cz/czadsb-install/refs/heads/main/install"
 #INSTALL_URL="https://raw.githubusercontent.com/CZADSB/czadsb-install/refs/heads/main/install"
 
 # echo ${{ vars.URL_SCRIPTS }}
@@ -90,9 +90,9 @@ function set_default(){
     # Zesileni rtl-sdr zarizebi
     [[ -z ${READSB_GAIN} ]] && READSB_GAIN="auto"
     # Vychozi adresa pro odesilani ADSB dat
-    [[ -z ${READSB_DST} ]] && READSB_DST="feed.czadsb.cz,30004"
+    [[ -z ${READSB_DST} ]] && READSB_DST="feed.czadsb.cz,3004"
     # Zalozni adresa pro odesilani ADSB dat
-    [[ -z ${READSB_BCK} ]] && READSB_BCK="feed.rxw.cz,30004"
+    [[ -z ${READSB_BCK} ]] && READSB_BCK="feed.rxw.cz,3004"
     # Pridani dalsich voleb pro ReADSB
     [[ -z ${READSB_OPT} ]] && READSB_OPT=""
 
@@ -110,13 +110,13 @@ function set_default(){
     [[ -z ${ADSBFWD_BAC} ]] && ADSBFWD_BAC=${READSB_BCK}
 
     # Nazev programu MLAT client
-    [[ -z ${MLAT_NAME} ]] && MLAT_NAME="mlat-client"
+    [[ -z ${MLAT_NAME} ]] && MLAT_NAME="czadsb-mlat"
     # Adresa mlat serveru pro vypocet
-    [[ -z ${MLAT_SERVER} ]] && MLAT_SERVER="czadsb.cz:40147"
+    [[ -z ${MLAT_SERVER} ]] && MLAT_SERVER="mlat.czadsb.cz:3109"
     # Adresa kam posilat vypocitane pozice letadel
-    [[ -z ${MLAT_RESULT} ]] && MLAT_RESULT="czadsb.cz:31003"
+    [[ -z ${MLAT_RESULT} ]] && MLAT_RESULT="127.0.0.1:30104"
     # Format a typ pripojeni pro odesilani zpracovanych dat
-    [[ -z ${MLAT_FORMAT} ]] && MLAT_FORMAT="basestation,connect"
+    [[ -z ${MLAT_FORMAT} ]] && MLAT_FORMAT="beast,connect"
 
     # Lighttpd  
     [[ -z ${LIGHTTPD} ]] && LIGHTTPD="notinstall"
@@ -232,7 +232,7 @@ function info_system(){
     printf "┌────────────────────────── Informace o systemu ───────────────────────────┐\n"
     printf "│ System: %-64s │\n" "${STATION_SYSTEM} - ${STATION_ARCH}"
     printf "│ Model: %-64s  │\n" "${STATION_MODEL} - ${STATION_MACHINE}"
-    printf "│ URL: %-63s v.%-1s │\n" "${INSTALL_TXT}" "${CFG_VERSION}"
+    printf "│ URL: %-62s  v.%-1s │\n" "${INSTALL_TXT}" "${CFG_VERSION}"
     [[ "$1" == "end" ]] && printf "└──────────────────────────────────────────────────────────────────────────┘\n"
 }
 
@@ -287,19 +287,21 @@ function collor_set(){
 
 # Funkce zjisti cely nazev sluzby a stav nekterych hodnot 
 function info_ctl(){
-    IS_CTL=$(systemctl | awk '/'$1'.*\.service/ {print $1}' | awk -F. '{print $1}' | tr -d '\n')
+#    IS_CTL=$(systemctl | awk '/'$1'.*\.service/ {print $1}' | awk -F. '{print $1}' | tr -d '\n')
+#    IS_CTL=$(systemctl show $1.service | awk -F = '/^Names=/{print $2}' | tr -d '\n')
+    IS_CTL=$(systemctl list-units --all --plain --no-legend | awk '/'$1'\.service/ {print $1}' | awk -F. '{print $1}' | tr -d '\n')
     if [[ -z ${IS_CTL} ]];then 
         systemctl status $1 &>/dev/null
         [[ "$?" != "4" ]] && IS_CTL=$1
     fi
     if [[ ! -z ${IS_CTL} ]];then
-        IS_CTL_STATE=$(systemctl show ${IS_CTL} | grep UnitFileState | awk -F = '{print $2}' | tr -d '\n' )
-        IS_CTL_PRESENT=$(systemctl show ${IS_CTL} | grep UnitFilePreset | awk -F = '{print $2}' | tr -d '\n' )
-        IS_CTL_ACTIVE=$(systemctl show ${IS_CTL} | grep ActiveState | awk -F = '{print $2}' | tr -d '\n' )
+        IS_CTL_STATE=$(systemctl show ${IS_CTL}.service   | awk -F = '/UnitFileState=/{print $2}'  | tr -d '\n' )
+        IS_CTL_PRESENT=$(systemctl show ${IS_CTL}.service | awk -F = '/UnitFilePreset=/{print $2}' | tr -d '\n' )
+        IS_CTL_ACTIVE=$(systemctl show ${IS_CTL}.service  | awk -F = '/ActiveState=/{print $2}'    | tr -d '\n' )
         collor_set ${IS_CTL_STATE} && IS_CTL_STATE=${C}
         collor_set ${IS_CTL_PRESENT} && IS_CTL_PRESENT=${C}
         collor_set ${IS_CTL_ACTIVE} && IS_CTL_ACTIVE=${C}
-        printf "│ %-27s %-14s %-16s %-12s │\n" "${IS_CTL}" "${IS_CTL_STATE}" "${IS_CTL_PRESENT}" "${IS_CTL_ACTIVE}"
+        printf "│ %-27s %-15s %-16s %-12s │\n" "${IS_CTL}" "${IS_CTL_STATE}" "${IS_CTL_PRESENT}" "${IS_CTL_ACTIVE}"
     else
         IS_CTL=""
     fi
@@ -318,12 +320,13 @@ function info_components() {
         local prefixes=()
     fi
     local prefixes+=(
-        "readsb"
-        "tar1090"
+        "readsb*"
+        "czadsb*"         # czadsb  
+        "tar1090*"
         "adsbfwd"
         "adsbhub"         # adsbhub.org
-        "adsbexchange"    # adsbexchange.com
-        "mlat-client"
+        "adsbexchange*"   # adsbexchange.com
+        "mlat-client*"
         "piaware"         # flightaware.com
         "fr24feed"        # flightradar24.com
         "lighttpd"
@@ -340,7 +343,7 @@ function info_components() {
 
     # Najdi všechny systemd služby podle prefixů
     for prefix in "${prefixes[@]}"; do
-        for svcfile in /etc/systemd/system/${prefix}*.service /lib/systemd/system/${prefix}*.service; do
+        for svcfile in /etc/systemd/system/${prefix}.service /lib/systemd/system/${prefix}.service; do
             [[ -e "$svcfile" ]] || continue
             local svc="$(basename "$svcfile" .service)"
 
@@ -395,7 +398,7 @@ function info_setting(){
     printf "│ Dump1090-fa  %-10s dev: %-15s ppm: %-5d  gain: %4s dB   │\n" "${DUMP1090}" "${DUMP1090_DEV}" "${DUMP1090_PPM}" "${DUMP1090_GAIN}"
     printf "│ ADSBfwd      %-10s dst: %-42s  │\n" "${ADSBFWD}" "${ADSBFWD_DST} ${ADSBFWD_TXT}"
     fi
-    printf "│ Mlat-client  %-10s Server: %-40s │\n" "${MLAT}" "${MLAT_SERVER} -> ${MLAT_RESULT}"
+    printf "│ Mlat         %-10s Server: %-40s │\n" "${MLAT}" "${MLAT_SERVER} -> ${MLAT_RESULT}"
     printf "│ VPN-CzADSB   %-10s url: %-19s Local: %-16s │\n" "${N2NADSB}" "${N2NADSB_SERVER}" "${N2NADSB_LOCAL}"
     printf "│ RpiMonitor   %-59s │\n" "${RPIMONITOR}"
     printf "│ Reporter     %-59s │\n" "${REPORTER}"
@@ -1536,11 +1539,14 @@ NET_OPTIONS="--net --net-ri-port 30001 --net-ro-port 30002 --net-sbs-port 30003 
 # Specifikace pro Json vystupy
 JSON_OPTIONS="--json-location-accuracy 2 --range-outline-hours 24"
 EOM
-        if [[ "$(systemctl is-active ${READSB_NAME})" != "active" ]];then
-            echo " - ERROR: ReADSB neni spusten !"
+        if [[ "${READSB}" == "enable" ]];then
+            echo " - restart sluzbu ReADSB client pro aplikaci zmen."
+            $SUDO systemctl restart ${MLAT_NAME}
+            if [[ "$(systemctl is-active ${MLAT_NAME})" != "active" ]];then
+                echo " - ERROR: ReADSB client neni spusten !"
+            fi
         else
-            echo " - restart sluzbu ReADSB pro aplikaci zmen."
-            $SUDO systemctl restart ${READSB_NAME}
+            echo " - WARNING: ReADSB sluzba neni povolena, zm2ny se neaplikovali !"
         fi
     else
         echo " - instalace neni povolena, neprovadi se zadna zmena."
@@ -1557,7 +1563,7 @@ function install_adsbfwd(){
         UnitFileState=$(systemctl show ${ADSBFWD_NAME} | grep "UnitFileState" | awk -F = '{print $2}')
         if [[ "${UnitFileState}" == "" ]] || ${UPGRADE} ;then
             echo " - instalace / upgrade ADSBfwd type ${ADSBFWDE_TYPE}"
-            if [[ -z ${ADSBFWD_TYPE} ]] && [[ "${ADSBFWD_TYPE}" == "readsb" ]];then
+            if [[ ! -z ${ADSBFWD_TYPE} ]] && [[ "${ADSBFWD_TYPE}" == "readsb" ]];then
                 wget -q ${INSTALL_URL}/install-adsbfwd2.sh -O /tmp/install.tmp
             else
                 wget -q ${INSTALL_URL}/install-adsbfwd.sh -O /tmp/install.tmp
@@ -1588,13 +1594,17 @@ function install_mlatclient(){
             wget -q ${INSTALL_URL}/install-mlatclient.sh -O /tmp/install.tmp
             . /tmp/install.tmp
             rm -f /tmp/install.tmp
+            set_cfg
         fi
         [[ "${UnitFileState}" != "${MLAT}d" ]] && $SUDO systemctl ${MLAT} ${MLAT_NAME}
-        if [[ "$(systemctl is-active ${MLAT_NAME})" != "active" ]];then
-            echo " - ERROR: MLAT client neni spusten !"
-        else
+        if [[ "${MLAT}" == "enable" ]];then
             echo " - restart sluzbu MLAT client pro aplikaci zmen."
             $SUDO systemctl restart ${MLAT_NAME}
+            if [[ "$(systemctl is-active ${MLAT_NAME})" != "active" ]];then
+                echo " - ERROR: MLAT client neni spusten !"
+            fi
+        else
+            echo " - WARNING: MLAT sluzba neni povolena, zm2ny se neaplikovali !"
         fi
     else
         echo " - instalace neni povolena, neprovadi se zadna zmena."
@@ -1901,6 +1911,7 @@ function upgrade_adsbfwd(){
     UPGRADE=true
     install_adsbfwd && UPDATE_ADSBFWD=false
     UPGRADE=false
+    echo; input "Pro pokracovani stiskni enter ..."
 }
 
 # Funkce pro upgrade na verzi 4, bez AdsbFWD
@@ -1942,6 +1953,7 @@ function upgrade_czadsb(){
     ${UPDATE_LIGHTTPD} && install_lighttpd && UPDATE_LIGHTTPD=false
     ${UPDATE_TAR1090} && install_tar1090 && UPDATE_TAR1090=false
     UPGRADE=false
+    echo; input "Pro pokracovani stiskni enter ..."
 }
 
 # ------------------------ Konec definic funkci --------------------------------
@@ -2020,7 +2032,7 @@ fi
 # Over zda existuje novy konfiguracni soubor jinak ho vytvor a over puvodni konfiguracni soubor
 if [ -s ${CFG} ];then
     $SUDO dos2unix ${CFG}
-    . ${CFG}
+    source ${CFG}
     CFG_NEW="false"
     [[ -z ${CFG_VERSION} ]] &&  CFG_VERSION=2
 # Over verzi cfg Upravit: VPNEDGE ; LOCAL ; DUMP1090    
@@ -2144,6 +2156,14 @@ if ${CFG_NEW} ;then
     install_select
     input "Pro pokracovani stiskni enter ..."
 fi
+
+if [ "$MLAT_NAME" != "czadsb-mlat" ];then
+    UPGRADE=true
+    UPDATE_MLAT=true
+    install_mlatclient && UPDATE_MLAT=false
+    UPGRADE=false
+fi
+
 
 while true; do
     clear

@@ -1,0 +1,16 @@
+[Unit]
+Description=MLAT client for CzADSB
+Documentation=https://czadsb.cz
+After=network.target
+
+[Service]
+Type=simple
+User=adsb
+ExecStart=/opt/czadsb/czadsb-mlat.sh
+SyslogIdentifier=czadsb-mlat
+Restart=always
+RestartSec=30
+RestartPreventExitStatus=64
+
+[Install]
+WantedBy=multi-user.target
