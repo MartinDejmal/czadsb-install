@@ -10,7 +10,7 @@ N2NADSB_USER="adsb"
 # Cesta ke konfiguracnimu souboru
 N2NADSB_CFG="/etc/default/${N2NADSB_NAME}"
 # Adresar pro instalaci ADSBfwd
-N2NADSB_FOLDER="/opt/vpn-czadsb"
+#N2NADSB_FOLDER="/opt/vpn-czadsb"
 
 # Lokalni prirazena adresa
 N2NADSB_LOCAL=""
@@ -30,19 +30,19 @@ if [[ -n $1 ]] && [[ -s $1 ]];then
     N2NADSB_FILE="true"
     # Prevezmy, prednastav uzivatele a instalacni adresar
     [ ! -z ${CZADSB_USER} ] && N2NADSB_USER=${CZADSB_USER}
-    [ ! -z ${CZADSB_FOLDER} ] && N2NADSB_FOLDER=${CZADSB_FOLDER}
+#    [ ! -z ${CZADSB_FOLDER} ] && N2NADSB_FOLDER=${CZADSB_FOLDER}
 elif [[ -n ${CFG} ]] && [[ -s ${CFG} ]];then
     N2NADSB_CFG=${CFG}
     N2NADSB_FILE="true"
     # Prevezmy, prednastav uzivatele a instalacni adresar
     [ ! -z ${CZADSB_USER} ] && N2NADSB_USER=${CZADSB_USER}
-    [ ! -z ${CZADSB_FOLDER} ] && N2NADSB_FOLDER=${CZADSB_FOLDER}
+#    [ ! -z ${CZADSB_FOLDER} ] && N2NADSB_FOLDER=${CZADSB_FOLDER}
 elif [[ -s "/etc/default/czadsb.cfg" ]];then
     N2NADSB_CFG="/etc/default/czadsb.cfg"
     N2NADSB_FILE="true"
     # Prevezmy, prednastav uzivatele a instalacni adresar
     [ ! -z ${CZADSB_USER} ] && N2NADSB_USER=${CZADSB_USER}
-    [ ! -z ${CZADSB_FOLDER} ] && N2NADSB_FOLDER=${CZADSB_FOLDER}
+#    [ ! -z ${CZADSB_FOLDER} ] && N2NADSB_FOLDER=${CZADSB_FOLDER}
 else
     N2NADSB_FILE="false"
 fi
@@ -75,9 +75,9 @@ else
     echo "* Uzivatel \"${N2NADSB_USER}\" jiz existuje"
 fi
 
-echo "* Nastaveni uzivatelskych prav pro slozku ${N2NADSB_FOLDER}"
-$SUDO mkdir -p ${N2NADSB_FOLDER}
-$SUDO chown ${N2NADSB_USER}:${N2NADSB_USER} -R ${N2NADSB_FOLDER}
+#echo "* Nastaveni uzivatelskych prav pro slozku ${N2NADSB_FOLDER}"
+#$SUDO mkdir -p ${N2NADSB_FOLDER}
+#$SUDO chown ${N2NADSB_USER}:${N2NADSB_USER} -R ${N2NADSB_FOLDER}
 
 
 echo
@@ -114,7 +114,7 @@ N2NADSB_SERVER="${N2NADSB_SERVER}"
 # Uzivatel pod kterym je sluzba spustena - NEMENIT
 N2NADSB_USER="${N2NADSB_USER}"
 # Cesta k vlastnimu programu - NEMENIT
-N2NADSB_FOLDER="${N2NADSB_FOLDER}"
+#N2NADSB_FOLDER="${N2NADSB_FOLDER}"
 
 EOM
     fi
@@ -151,7 +151,7 @@ if [[ -z ${N2NADSB} ]] || [[ "${N2NADSB}" == "enabled" ]];then
     $SUDO systemctl restart ${N2NADSB}.service
 fi
 echo "Instalace N2N VPN Edge pro CzADSB ukoncena"
-echo "Umisteni skriptu: ${N2NADSB_FOLDER}"
+#echo "Umisteni skriptu: ${N2NADSB_FOLDER}"
 if ${CONFIG_SAVE};then
     echo "Nastavte konfiguracni soubor: ${N2NADSB_CFG}"
 else
