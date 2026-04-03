@@ -94,6 +94,7 @@ dovnload_piaware_deb(){
     echo "* Ztazeni predkompilovanych balicku"
     echo "--------------------------------------"
     WGET=true
+    cd ~
     [[ $WGET ]] && wget -nv ${URL_DEB}/${VERSION_CODENAME}/piaware_${PIA_VER}_${ARCH}.deb
     [[ ! "$?" == "0" ]] && WGET=false
     [[ $WGET ]] && wget -nv ${URL_DEB}/${VERSION_CODENAME}/piaware-dbgsym_${PIA_VER}_${ARCH}.deb
@@ -102,10 +103,11 @@ dovnload_piaware_deb(){
         echo "* Instalace zavislich balicku"
         echo "------------------------------------->"
         $SUDO apt install -y --no-install-suggests --no-install-recommends itcl3 tcl tcl-tls tcl8.6 tcllib tclx8.4 tcl8.6-dev tcl-tclreadline tcllib-critcl python3-pyasyncore
+        $SUDO apt install -y --no-install-suggests --no-install-recommends python3-pyasyncore
         echo "-------------------------------------<"
         echo "* Instalace PiAware"
         echo "------------------------------------->"
-        $SUDO dpkg -i piaware*.deb
+        $SUDO apt install -y ./piaware*.deb
         echo "-------------------------------------<"
         $SUDO piaware-config allow-auto-updates yes
         $SUDO piaware-config allow-manual-updates yes
