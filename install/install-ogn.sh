@@ -45,7 +45,10 @@ fi
 
 echo "* Instalace zavislosti"
 echo "------------------------------------->"
-$SUDO apt-get install -y --no-install-suggests --no-install-recommends libconfig9 libjpeg-dev libfftw3-dev lynx telnet ntpdate procserv
+$SUDO apt-get install -y --no-install-suggests --no-install-recommends libjpeg-dev libfftw3-dev lynx telnet procserv
+$SUDO apt-get install -y --no-install-suggests --no-install-recommends libconfig9
+$SUDO apt-get install -y --no-install-suggests --no-install-recommends libconfig11
+$SUDO apt-get install -y --no-install-suggests --no-install-recommends ntpdate
 if [[  "$(command -v ntpd)" == "" ]] && [[ "$(command -v chronyd)" == "" ]] ;then
     $SUDO apt install -y --no-install-suggests --no-install-recommends chrony
 fi
@@ -72,6 +75,7 @@ fi
 echo "* Instalace rtlsdr-ogn-bin"
 tar -xvzf rtlsdr-ogn-bin-latest.tgz
 $SUDO cp -rp ~/rtlsdr-ogn* /opt/
+$SUDO rm -r ~/rtlsdr-ogn*
 $SUDO rm /opt/rtlsdr-ogn-bin-*.tgz
 $SUDO chown ${OGN_USER}:${OGN_USER} -R /opt/rtlsdr-ogn*
 $SUDO chown ${OGN_USER}:${OGN_USER} -R /opt/rtlsdr-ogn/
