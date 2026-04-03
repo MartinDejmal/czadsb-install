@@ -855,13 +855,13 @@ function set_rpimonitor(){
         RPIMONITOR=""
     else
         printf "┌─────────────────────────────── RpiMonotor ───────────────────────────────┐\n"
-        printf "│ RpiMonitor umoznuje pres webove rozhrani na portu 8888 sledovat aktualni │\n"
-        printf "│ stav Raspberry PI.  Pokud system bezi na Raspberry, doporucujeme monitor │\n"
-        printf "│ nainstalovat ale nejedna se o klicovou  komponentu.                      │\n"
+        printf "│ RpiMonitor umoznuje pres webove rozhrani sledovat aktualni stav Raspberry│\n"
+        printf "│ PI.  Pokud system  bezi  na  Raspberry v.3 a novejší,  můzete si monitor │\n"
+        printf "│ nainstalovat. Nejedna se o klicovou komponentu a zatezuje SD kartu.      │\n"
         printf "└──────────────────────────────────────────────────────────────────────────┘\n"
         if [[ "${EXPERT}" == "user" ]];then
-            [[ "${RPIMONITOR}" != "enable" ]] &&  UPDATE_RPIMONITOR=true
-            RPIMONITOR="enable"
+            [[ "${RPIMONITOR}" != "enable" ]] && [[ "${RPIMONITOR}" != "disable" ]] && UPDATE_RPIMONITOR=true
+            RPIMONITOR="notinstall"
         else
             if [[ "${RPIMONITOR}" != "enable" ]] && [[ "${RPIMONITOR}" != "disable" ]];then
                 if [[ ${RPIMONITOR} == "notinstall"  ]];then
@@ -928,6 +928,9 @@ function set_n2nvpn(){
         echo  "Lokalni IP adrtesa VPN prirazena komunitou CzADSB."
         input "Pokud ji zatim nemate, ponechte prazdne. [${N2NADSB_LOCAL}]:" '^[0-9\.]*$' "${N2NADSB_LOCAL}" 
         N2NADSB_LOCAL=${X}
+        if [[ ${N2NADSB_LOCAL} == "" ]];then
+            N2NADSB_LOCAL=$(curl -s "https://user.czadsb.cz/get_free_ip.php?device=${STATION_NAME}")
+        fi
 
         UPDATE_N2NVPN=true
     fi
