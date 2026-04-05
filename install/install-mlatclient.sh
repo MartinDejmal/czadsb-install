@@ -80,6 +80,11 @@ else
     MLAT_RESTART=true
 fi
 
+# Instalace git
+echo "* Overeni pritomnost git a python3-dev, doinstalovani"
+[[ -n $(command -v git) ]]          || ($SUDO apt install -y --no-install-suggests --no-install-recommends git)
+dpkg -s python3-dev >/dev/null 2>&1 || ($SUDO apt install -y --no-install-suggests --no-install-recommends python3-dev)
+
 # Vytvorime VENV prostredi
 if [ -d $PATH_BIN ];then
     $SUDO rm -fr $PATH_BIN
@@ -100,11 +105,13 @@ NAME_GIT="${PATH_GIT##*/}"      # Odstraníme vše před posledním '/' -> reads
 NAME_GIT="${NAME_GIT%.*}"       # Odstraníme příponu -> readsb
 
 # Vnorime se do adresare zdroje, doinstalujeme chybejici programy a provedeme instalaci
+echo "* Prechazim do adresare $NAME_GIT"
 cd $NAME_GIT
 sed -i "s|default=('feed.adsbexchange.com', 31090))|default=('feed.czadsb.cz', 3109))|g" ./$NAME_GIT
 echo "* Instaluji pomocne programy do VENV prostredi"
 python3 -c "import setuptools" || python3 -m pip install setuptools
 python3 -c "import asyncore"   || python3 -m pip install pyasyncore
+
 echo "* Provadim vlastni kompilaci"
 pip install .
 
@@ -116,7 +123,7 @@ rm -rf $PATH_BIN/bin/$NAME_GIT
 deactivate
 
 # Pokud neexistuje stavjici konfigurace, nainstaluj vzor
-if [! $MLAT_FILE ];then
+if [[ ! ${MLAT_FILE} ]];then
     echo "* Ukladam vzorovou konfiguraci do $MLAT_CFG"
     wget $URL_SCRIPT/$MLAT_NAME/$MLAT_NAME -O $MLAT_CFG
 fi 
