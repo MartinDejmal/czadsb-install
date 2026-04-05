@@ -1544,8 +1544,8 @@ JSON_OPTIONS="--json-location-accuracy 2 --range-outline-hours 24"
 EOM
         if [[ "${READSB}" == "enable" ]];then
             echo " - restart sluzbu ReADSB client pro aplikaci zmen."
-            $SUDO systemctl restart ${MLAT_NAME}
-            if [[ "$(systemctl is-active ${MLAT_NAME})" != "active" ]];then
+            $SUDO systemctl restart ${READSB_NAME}
+            if [[ "$(systemctl is-active ${READSB_NAME})" != "active" ]];then
                 echo " - ERROR: ReADSB client neni spusten !"
             fi
         else
