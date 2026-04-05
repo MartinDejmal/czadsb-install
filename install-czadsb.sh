@@ -763,6 +763,7 @@ function set_adsbfwd2(){
             ADSBFWD_BAC=${X}
             input "Zde muzete nastavit specialni paramatery pro ReADSB (prosim jen tehdy, pokud vite co delate!) [${READSB_OPT}]:" '^[a-zA-Z0-9_\.\-\ ]*$' "${ADSBFWD_OPT}"
             ADSBFWD_OPT=${X}
+            [[ "${ADSBFWD_OPT}" == " " ]] && ADSBFWD_OPT=""
         fi
         UPDATE_ADSBFWD=true
     fi
@@ -1654,7 +1655,12 @@ install_lighttpd(){
             fi
             [[ "${LIGHTTPD}" == "enable" ]] && $SUDO systemctl reload ${LIGHTTPD_NAME}
         else
-            echo
+            if [[ "${LIGHTTPD}" == "enable" ]];then
+                echo " - restart sluzby ${LIGHTTPD_NAME} pro aplikovani zmen."
+                $SUDO systemctl restart ${LIGHTTPD_NAME}
+            else
+                echo " - nebyla provedena zadna zmena."
+            fi
         fi
         [[ "${UnitFileState}" != "${LIGHTTPD}d" ]] && $SUDO systemctl ${LIGHTTPD} ${LIGHTTPD_NAME}
     else
@@ -1675,10 +1681,16 @@ install_tar1090(){
             $SUDO sed -i "/^\/\/shareBaseUrl = 'https:\/\/adsb\.lol\/'[^;]*/i shareBaseUrl = 'https://aircrafts.rxw.cz/'" /usr/local/share/tar1090/html/config.js
             $SUDO sed -i "s/\/\/ imageConfigLink = .*/imageConfigLink = '\/';/g" /usr/local/share/tar1090/html/config.js
             $SUDO sed -i "s/\/\/ imageConfigText = .*/imageConfigText = 'Local panel';/g" /usr/local/share/tar1090/html/config.js
+            [[ "${TAR1090}" == "enable" ]] && $SUDO systemctl restart ${TAR1090_NAME}
         else
-            echo
+            if [[ "${TAR1090}" == "enable" ]];then
+                echo " - restart sluzby ${TAR1090_NAME} pro aplikovani zmen."
+                $SUDO systemctl restart ${TAR1090_NAME}
+            else
+                echo " - nebyla provedena zadna zmena."
+            fi
         fi
-        [[ "${UnitFileState}" != "${REPORTER}d" ]] && $SUDO systemctl ${REPORTER} ${TAR1090_NAME}
+        [[ "${UnitFileState}" != "${TAR1090}d" ]] && $SUDO systemctl ${TAR1090} ${TAR1090_NAME}
     else
         echo " - instalace neni povolena, neprovadi se zadna zmena."
     fi
