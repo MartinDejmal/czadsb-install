@@ -135,7 +135,7 @@ After=network-online.target
 [Service]
 Type=simple
 EnvironmentFile=${N2NADSB_CFG}
-ExecStart=/usr/sbin/edge -a \${N2NADSB_LOCAL} -s \${N2NADSB_MASK} -l \${N2NADSB_SERVER} -c adsb -k adsb123 -b
+ExecStart=/usr/sbin/edge -a \${N2NADSB_LOCAL} -s \${N2NADSB_MASK} -l \${N2NADSB_SERVER} -c adsb -k adsb123 -b -M 1300
 Restart=on-failure
 RestartSec=30
 RestartPreventExitStatus=64
